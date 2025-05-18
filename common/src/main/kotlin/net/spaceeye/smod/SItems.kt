@@ -1,0 +1,30 @@
+package net.spaceeye.smod
+
+import dev.architectury.registry.CreativeTabRegistry
+import dev.architectury.registry.registries.DeferredRegister
+import dev.architectury.registry.registries.RegistrySupplier
+import net.minecraft.core.Registry
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.item.CreativeModeTab
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.spaceeye.smod.items.RopeItem
+
+object SItems {
+    val ITEMS = DeferredRegister.create(SM.MOD_ID, Registry.ITEM_REGISTRY)
+
+    val TAB: CreativeModeTab = CreativeTabRegistry.create(
+        ResourceLocation(
+            SM.MOD_ID,
+            "smod_tab"
+        )
+    ) { ItemStack(LOGO.get()) }
+
+    var LOGO: RegistrySupplier<Item> = ITEMS.register("smod_logo") { Item(Item.Properties()) }
+
+    var ROPE = ITEMS.register("rope") { RopeItem() }
+
+    fun register() {
+        ITEMS.register()
+    }
+}

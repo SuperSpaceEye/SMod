@@ -1,0 +1,105 @@
+plugins {
+    id "com.github.johnrengelman.shadow" version "7.1.2"
+}
+
+architectury {
+    platformSetupLoomIde()
+    fabric()
+}
+
+configurations {
+    common
+    shadowCommon // Don't use shadow from the shadow plugin because we don't want IDEA to index this.
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
+    developmentFabric.extendsFrom common
+}
+
+repositories {
+    maven {
+        url "https://cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
+    }
+    maven {
+        url = "https://repo.essential.gg/repository/maven-public"
+    }
+    mavenCentral()
+}
+
+dependencies {
+    modRuntimeOnly(files("jars/VMod-Fabric-1.18.2-1.2.2.jar"))
+
+    runtimeOnly(("gg.essential:elementa:${rootProject.elementaVersion}")) {transitive false}
+    modRuntimeOnly("gg.essential:universalcraft-1.18.1-fabric:${rootProject.ucVersion}") {transitive false}
+    modRuntimeOnly("net.spaceeye:valkyrien-ship-schematics-$project.name:1.18.2-1.1") {transitive false}
+    runtimeOnly("org.jgrapht:jgrapht-core:1.5.2") {transitive false}
+
+    api 'org.joml:joml-primitives:1.10.0'
+    api 'org.joml:joml:1.10.4'
+
+    modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
+    modApi "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
+    // Remove the next line if you don't want to depend on the API
+    modApi "dev.architectury:architectury-fabric:${rootProject.architectury_version}"
+
+    common(project(path: ":common", configuration: "namedElements")) { transitive false }
+    shadowCommon(project(path: ":common", configuration: "transformProductionFabric")) { transitive false }
+
+    modApi(files("jars/valkyrienskies-118-2.1.1-beta.5.jar"))
+    implementation("org.valkyrienskies.core:api:${rootProject.vscore_version}") {
+        exclude group: 'org.joml', module: ''
+    }
+    implementation("org.valkyrienskies.core:util:${rootProject.vscore_version}") {
+        exclude group: 'org.joml', module: ''
+    }
+    implementation("org.valkyrienskies.core:api-game:${rootProject.vscore_version}") {
+        exclude group: 'org.joml', module: ''
+    }
+
+    // Kotlin
+    modImplementation("net.fabricmc:fabric-language-kotlin:1.10.10+kotlin.1.9.10")
+    api "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.21"
+    api "org.jetbrains.kotlin:kotlin-reflect:1.7.21"
+
+    implementation 'com.electronwill.night-config:core:3.6.3'
+    implementation 'com.electronwill.night-config:toml:3.6.3'
+    modCompileOnlyApi "curse.maven:forge-config-api-port-fabric-547434:3943250"
+}
+
+processResources {
+    inputs.property "version", project.version
+
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}
+
+shadowJar {
+    configurations = [project.configurations.shadowCommon]
+    archiveClassifier.set("dev-shadow")
+}
+
+remapJar {
+    inputFile.set shadowJar.archiveFile
+    dependsOn shadowJar
+    archiveClassifier.set(null)
+    archiveBaseName.set("${archiveBaseName.get()}-Fabric-${minecraft_version}")
+}
+
+jar {
+    archiveClassifier.set("dev")
+}
+
+sourcesJar {
+    def commonSources = project(":common").sourcesJar
+    dependsOn commonSources
+    from commonSources.archiveFile.map { zipTree(it) }
+}
+
+components.java {
+    withVariantsFromConfiguration(project.configurations.shadowRuntimeElements) {
+        skip()
+    }
+}

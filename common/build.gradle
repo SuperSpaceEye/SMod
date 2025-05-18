@@ -1,0 +1,46 @@
+repositories {
+    mavenLocal()
+    maven {
+        url = "https://repo.essential.gg/repository/maven-public"
+    }
+    mavenCentral()
+}
+
+dependencies {
+    modImplementation(files("jars/VMod-Fabric-1.18.2-1.2.2.jar"))
+//    implementation(files("jars/VMod-1.2.2-dev.jar"))
+
+    api 'org.joml:joml-primitives:1.10.0'
+    api 'org.joml:joml:1.10.4'
+    // We depend on fabric loader here to use the fabric @Environment annotations and get the mixin dependencies
+    // Do NOT use other classes from fabric loader
+    modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
+    // Remove the next line if you don't want to depend on the API
+    modApi "dev.architectury:architectury:${rootProject.architectury_version}"
+
+    modApi("org.valkyrienskies:valkyrienskies-118-common:${rootProject.vs2_version}")
+    implementation("org.valkyrienskies.core:api:${rootProject.vscore_version}") {
+        exclude group: 'org.joml', module: ''
+    }
+    implementation("org.valkyrienskies.core:impl:${rootProject.vscore_version}") {
+        exclude group: 'org.joml', module: ''
+    }
+    implementation("org.valkyrienskies.core:api-game:${rootProject.vscore_version}") {
+        exclude group: 'org.joml', module: ''
+    }
+
+    api "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.21"
+    api "org.jetbrains.kotlin:kotlin-reflect:1.7.21"
+
+    compileOnly("gg.essential:elementa:${rootProject.elementaVersion}")
+    modImplementation(include("gg.essential:universalcraft-1.18.1-fabric:${rootProject.ucVersion}"))
+}
+
+//Renames .kotlin_module of common so that it's not overwrited during forge/fabric compilation
+compileKotlin { doLast {
+    file(compileKotlin.destinationDirectory.get().toString() + "/META-INF/SMod.kotlin_module").renameTo(file(compileKotlin.destinationDirectory.get().toString() + "/META-INF/SMod_common.kotlin_module"))
+} }
+
+architectury {
+    common("fabric", "forge")
+}

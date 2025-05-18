@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "id": "the_smod",
+  "version": "${version}",
+  "name": "SMod",
+  "description": "",
+  "authors": ["SpaceEye"],
+  "contact": {
+    "homepage": ""
+  },
+  "license": "MIT",
+  "icon": "assets/the_smod/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      {
+        "adapter": "kotlin",
+        "value": "net.spaceeye.smod.fabric.SModFabric"
+      }
+    ],
+    "client": [
+      {
+        "adapter": "kotlin",
+        "value": "net.spaceeye.smod.fabric.client.SModFabricClient"
+      }
+    ]
+  },
+  "mixins": [
+    "the_smod.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.15.8",
+    "minecraft": "~1.18.2",
+    "java": ">=17",
+    "architectury": ">=4.12.94",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "another-mod": "*"
+  }
+}

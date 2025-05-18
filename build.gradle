@@ -1,0 +1,74 @@
+plugins {
+    id "architectury-plugin" version "3.4.146"
+    id "dev.architectury.loom" version "1.3.355" apply false
+
+    // Adds the Kotlin Gradle plugin
+    id 'org.jetbrains.kotlin.jvm' version '2.1.0'
+    // OPTIONAL Kotlin Serialization plugin
+    id 'org.jetbrains.kotlin.plugin.serialization' version '2.1.0'
+
+    id 'com.matthewprenger.cursegradle' version '1.4.0' apply false
+    id "com.modrinth.minotaur" version "2.4.3" apply false
+}
+
+architectury {
+    minecraft = rootProject.minecraft_version
+}
+
+subprojects {
+    apply plugin: "dev.architectury.loom"
+    apply plugin: "org.jetbrains.kotlin.jvm"
+
+    loom {
+        silentMojangMappingsLicense()
+    }
+
+    repositories {
+        mavenLocal()
+        maven {
+            name = "ParchmentMC"
+            url = "https://maven.parchmentmc.org"
+        }
+    }
+
+    dependencies {
+        minecraft "com.mojang:minecraft:${rootProject.minecraft_version}"
+        // The following line declares the mojmap mappings, you may use other mappings as well
+        mappings(loom.layered {
+            officialMojangMappings()
+            parchment("org.parchmentmc.data:parchment-${rootProject.minecraft_version}:2022.11.06@zip")
+        })
+    }
+
+    kotlin {
+        jvmToolchain(17)
+    }
+}
+
+allprojects {
+    apply plugin: "java"
+    apply plugin: "architectury-plugin"
+    apply plugin: "maven-publish"
+
+    archivesBaseName = rootProject.archives_name
+    version = rootProject.mod_version
+    group = rootProject.maven_group
+
+    repositories {
+        mavenLocal()
+        maven {
+            name = "Valkyrien Skies Internal"
+            url = 'https://maven.valkyrienskies.org'
+        }
+        mavenCentral()
+    }
+
+    tasks.withType(JavaCompile) {
+        options.encoding = "UTF-8"
+        options.release = 17
+    }
+
+    java {
+        withSourcesJar()
+    }
+}

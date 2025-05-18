@@ -1,0 +1,134 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        // Make sure this version matches the one included in Kotlin for Forge
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.21'
+        // OPTIONAL Gradle plugin for Kotlin Serialization
+        classpath 'org.jetbrains.kotlin:kotlin-serialization:1.8.21'
+    }
+}
+
+plugins {
+    id "com.github.johnrengelman.shadow" version "8.1.1"
+
+    // Adds the Kotlin Gradle plugin
+    id 'org.jetbrains.kotlin.jvm' version '2.1.0'
+    // OPTIONAL Kotlin Serialization plugin
+    id 'org.jetbrains.kotlin.plugin.serialization' version '2.1.0'
+}
+architectury {
+    platformSetupLoomIde()
+    forge()
+}
+
+loom {
+    forge {
+        mixinConfig "the_smod.mixins.json"
+    }
+    mixin {}
+}
+
+configurations {
+    common
+    shadow
+    shadowCommon // Don't use shadow from the shadow plugin because we don't want IDEA to index this.
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
+    developmentForge.extendsFrom common
+}
+
+repositories {
+    // Add KFF Maven repository
+    maven {
+        name = 'Kotlin for Forge'
+        url = 'https://thedarkcolour.github.io/KotlinForForge/'
+    }
+    maven {
+        url = "https://cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
+    }
+    maven {
+        url = "https://repo.essential.gg/repository/maven-public"
+    }
+    mavenCentral()
+}
+
+dependencies {
+    api 'org.joml:joml-primitives:1.10.0'
+    api 'org.joml:joml:1.10.4'
+
+    forge "net.minecraftforge:forge:${rootProject.forge_version}"
+    // Remove the next line if you don't want to depend on the API
+    modApi "dev.architectury:architectury-forge:${rootProject.architectury_version}"
+
+    common(project(path: ":common", configuration: "namedElements")) { transitive false }
+    shadowCommon(project(path: ":common", configuration: "transformProductionForge")) { transitive = false }
+
+    modApi("org.valkyrienskies:valkyrienskies-118-forge:${rootProject.vs2_version}") { transitive = false }
+    implementation("org.valkyrienskies.core:api:${rootProject.vscore_version}") { transitive false }
+
+    implementation 'thedarkcolour:kotlinforforge:3.12.0'
+
+    compileOnly("gg.essential:elementa:${rootProject.elementaVersion}") {transitive = false}
+    modCompileOnly("gg.essential:universalcraft-1.18.1-forge:${rootProject.ucVersion}") {transitive = false}
+}
+
+processResources {
+    inputs.property "version", project.version
+
+    filesMatching("META-INF/mods.toml") {
+        expand "version": project.version
+    }
+}
+
+shadowJar {
+    exclude "fabric.mod.json"
+    mergeServiceFiles()
+
+    configurations = [project.configurations.shadow, project.configurations.shadowCommon]
+    archiveClassifier.set("dev-shadow")
+
+    relocate("gg.essential.elementa", "net.spaceeye.elementa")
+    relocate("gg.essential.universal", "net.spaceeye.universal")
+}
+
+remapJar {
+    inputFile.set shadowJar.archiveFile
+    dependsOn shadowJar
+    archiveClassifier.set(null)
+    archiveBaseName.set("${archiveBaseName.get()}-Forge-${minecraft_version}")
+}
+
+jar {
+    archiveClassifier.set("dev")
+}
+
+sourcesJar {
+    def commonSources = project(":common").sourcesJar
+    dependsOn commonSources
+    from commonSources.archiveFile.map { zipTree(it) }
+}
+
+components.java {
+    withVariantsFromConfiguration(project.configurations.shadowRuntimeElements) {
+        skip()
+    }
+}
+
+publishing {
+    publications {
+        mavenForge(MavenPublication) {
+            artifactId = rootProject.archives_name + "-" + project.name
+            from components.java
+        }
+    }
+
+    // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+    repositories {
+        // Add repositories to publish to here.
+    }
+}
