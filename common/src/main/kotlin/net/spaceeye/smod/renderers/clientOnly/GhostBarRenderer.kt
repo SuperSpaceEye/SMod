@@ -8,8 +8,6 @@ import net.minecraft.client.Camera
 import net.minecraft.client.Minecraft
 import net.minecraft.client.renderer.LightTexture
 import net.minecraft.network.FriendlyByteBuf
-import net.spaceeye.smod.items.RopeItem
-import net.spaceeye.smod.items.RopeItem.Companion.raycastDistance
 import net.spaceeye.vmod.rendering.RenderTypes
 import net.spaceeye.vmod.rendering.RenderingUtils
 import net.spaceeye.vmod.rendering.types.BaseRenderer
@@ -25,7 +23,9 @@ import java.awt.Color
 
 class GhostBarRenderer(
     val pos: () -> Vector3d?,
-    val maxDistance: () -> Double
+    val maxDistance: () -> Double,
+    val raycastDistance: Double,
+    val numPreciseSides: Int
 ): BaseRenderer() {
     override fun renderData(
         poseStack: PoseStack,
@@ -45,7 +45,7 @@ class GhostBarRenderer(
 
         val sPos2 = if (rr.state.isAir) {
             Vector3d(player.eyePosition) + Vector3d(player.lookAngle) * raycastDistance
-        } else { calculatePrecise(rr, RopeItem.numPreciseSides) }
+        } else { calculatePrecise(rr, numPreciseSides) }
 
         val ship1 = level.getShipManagingPos(sPos1.x, sPos1.y, sPos1.z) as? ClientShip
         val ship2 = level.getShipManagingPos(sPos2.x, sPos2.y, sPos2.z) as? ClientShip
