@@ -1,6 +1,7 @@
 package net.spaceeye.smod
 
 import dev.architectury.platform.Platform
+import net.spaceeye.smod.vEntityExtensions.SModVEntityExtensions
 import net.spaceeye.vmod.VM
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
@@ -19,6 +20,7 @@ object SM {
         if (Platform.isDevelopmentEnvironment()) {
             VM.STUPID_FUCKING_THING_DOESNT_WORK = true
         }
+        SModVEntityExtensions
         SItems.register()
     }
 }

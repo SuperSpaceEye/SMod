@@ -9,6 +9,7 @@ import net.minecraft.world.item.CreativeModeTab
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.spaceeye.smod.items.RopeItem
+import net.spaceeye.smod.items.WrenchItem
 
 object SItems {
     val ITEMS = DeferredRegister.create(SM.MOD_ID, Registry.ITEM_REGISTRY)
@@ -21,6 +22,8 @@ object SItems {
     ) { ItemStack(LOGO.get()) }
 
     var LOGO: RegistrySupplier<Item> = ITEMS.register("smod_logo") { Item(Item.Properties()) }
+
+    var WRENCH = ITEMS.register("wrench") { WrenchItem() }
 
     var ROPE = ITEMS.register("rope") { RopeItem() }
 

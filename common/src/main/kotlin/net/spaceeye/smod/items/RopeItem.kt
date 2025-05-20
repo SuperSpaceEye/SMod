@@ -12,6 +12,7 @@ import net.minecraft.world.level.Level
 import net.spaceeye.smod.SItems
 import net.spaceeye.smod.renderers.clientOnly.GhostBarRenderer
 import net.spaceeye.smod.utils.regS2C
+import net.spaceeye.smod.vEntityExtensions.SModRopeWrenchable
 import net.spaceeye.vmod.events.PersistentEvents
 import net.spaceeye.vmod.reflectable.AutoSerializable
 import net.spaceeye.vmod.rendering.RenderingData
@@ -63,10 +64,11 @@ class RopeItem: Item(Properties().tab(SItems.TAB).stacksTo(64)) {
             level.makeVEntity(
                 RopeConstraint(sPos1, sPos2, shipId1, shipId2, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, (rPos1 - rPos2).dist().toFloat())
                     .addExtension(RenderableExtension(RopeRenderer(shipId1, shipId2, sPos1, sPos2, length.toDouble(), 1.0/8.0, length.roundToInt(), false)))
+                    .addExtension(SModRopeWrenchable(length.roundToInt()))
             )
             firstPos = null
             s2cResetPos.sendToClient(player, EmptyPacket())
-            InteractionResultHolder.consume<ItemStack>(player.mainHandItem.copy().also { it.count -= length.roundToInt() })
+            InteractionResultHolder.consume<ItemStack>(player.mainHandItem.also { it.count -= length.roundToInt() })
         } ?: super.use(level, player, usedHand)
     }
 
