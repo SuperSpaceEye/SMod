@@ -1,9 +1,21 @@
 package net.spaceeye.smod.items
 
+import gg.essential.elementa.components.UIContainer
+import net.minecraft.client.Minecraft
+import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.server.level.ServerLevel
+import net.minecraft.server.level.ServerPlayer
 import net.spaceeye.smod.SItems
 import net.spaceeye.smod.vEntityExtensions.SModPhysRopeWrenchable
+import net.spaceeye.vmod.guiElements.makeTextEntry
+import net.spaceeye.vmod.limits.ServerLimits
+import net.spaceeye.vmod.networking.Serializable
+import net.spaceeye.vmod.reflectable.AutoSerializable
+import net.spaceeye.vmod.reflectable.ByteSerializableItem.get
 import net.spaceeye.vmod.rendering.types.PhysRopeRenderer
+import net.spaceeye.vmod.translate.ANGLE_LIMIT
+import net.spaceeye.vmod.translate.RADIUS
+import net.spaceeye.vmod.translate.get
 import net.spaceeye.vmod.utils.RaycastFunctions
 import net.spaceeye.vmod.utils.Vector3d
 import net.spaceeye.vmod.vEntityManaging.VEntity
@@ -15,7 +27,16 @@ import java.awt.Color
 import kotlin.math.roundToInt
 
 class PhysRopeItem: TwoPointsItem(SItems.TAB, 64) {
-    override fun makeVEntity(level: ServerLevel, shipId1: ShipId, shipId2: ShipId, ship1: ServerShip?, ship2: ServerShip?, sPos1: Vector3d, sPos2: Vector3d, rPos1: Vector3d, rPos2: Vector3d, length: Double, pr: RaycastFunctions.RaycastResult, rr: RaycastFunctions.RaycastResult): VEntity {
+    class Data(): AutoSerializable {
+        private var i = 0
+        var radius: Double by get(i++, 0.5) { ServerLimits.instance.physRopeRadius.get(it) }
+        var angleLimit: Double by get(i++, 45.0) { ServerLimits.instance.physRopeAngleLimit.get(it) }
+    }
+
+    override val cGhostWidth: Double get() = withSync<Data, Double>(Minecraft.getInstance().player!!) { radius }
+
+    override fun makeVEntity(level: ServerLevel, shipId1: ShipId, shipId2: ShipId, ship1: ServerShip?, ship2: ServerShip?, sPos1: Vector3d, sPos2: Vector3d, rPos1: Vector3d, rPos2: Vector3d, length: Double, pr: RaycastFunctions.RaycastResult, rr: RaycastFunctions.RaycastResult): VEntity
+    = withSync<Data, VEntity>(Minecraft.getInstance().player!!) {
         val sDir1 = pr.globalNormalDirection!!
         val sDir2 = rr.globalNormalDirection!!
 
@@ -36,8 +57,16 @@ class PhysRopeItem: TwoPointsItem(SItems.TAB, 64) {
             right2 = -right2
         }
 
-        return PhysRopeConstraint(sPos1, sPos2, sDir1, sDir2, shipId1, shipId2, Float.MAX_VALUE, Float.MAX_VALUE, length.toFloat(), length.roundToInt(), 50.0, 0.5, Math.toRadians(45.0))
+        return PhysRopeConstraint(sPos1, sPos2, sDir1, sDir2, shipId1, shipId2, Float.MAX_VALUE, Float.MAX_VALUE, length.toFloat(), length.roundToInt(), 50.0, radius, Math.toRadians(angleLimit))
             .addExtension(PhysRopeRenderable(PhysRopeRenderer(shipId1, shipId2, sPos1, sPos2, up1, up2, right1, right2, Color(255, 255, 255), length.roundToInt(), false, listOf())))
             .addExtension(SModPhysRopeWrenchable(length.roundToInt()))
     }
+
+    override fun makeGUISettings(parentWindow: UIContainer) = withSync<Data, Unit>(Minecraft.getInstance().player!!) {
+        makeTextEntry(RADIUS.get(), ::radius, 2f, 2f, parentWindow, ServerLimits.instance.physRopeRadius)
+        makeTextEntry(ANGLE_LIMIT.get(), ::angleLimit, 2f, 2f, parentWindow, ServerLimits.instance.physRopeAngleLimit)
+    }
+
+    override fun getSyncData(): Serializable? = withData(Minecraft.getInstance().player!!) { syncData }
+    override fun setSyncData(data: FriendlyByteBuf, player: ServerPlayer) = withSync<Data, Unit>(player) { deserialize(data) }
 }

@@ -24,6 +24,7 @@ import java.awt.Color
 class GhostBarRenderer(
     val pos: () -> Vector3d?,
     val maxDistance: () -> Double,
+    val width: () -> Double,
     val raycastDistance: Double,
     val numPreciseSides: Int
 ): BaseRenderer() {
@@ -70,7 +71,7 @@ class GhostBarRenderer(
         val tpos2 = rPos2 - Vector3d(camera.position)
 
         RenderingUtils.Quad.makeFlatRectFacingCamera(vBuffer, poseStack.last().pose(),
-            color.red, color.green, color.blue, color.alpha, LightTexture.FULL_BRIGHT, 1.0/8.0,
+            color.red, color.green, color.blue, color.alpha, LightTexture.FULL_BRIGHT, width(),
             tpos1, tpos2
         )
 

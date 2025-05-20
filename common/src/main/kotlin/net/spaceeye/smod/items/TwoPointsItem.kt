@@ -1,6 +1,7 @@
 package net.spaceeye.smod.items
 
 import net.minecraft.client.Minecraft
+import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.InteractionHand
@@ -10,28 +11,49 @@ import net.minecraft.world.item.CreativeModeTab
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.Level
+import net.spaceeye.smod.ELOG
+import net.spaceeye.smod.gui.GUIBuilder
+import net.spaceeye.smod.gui.MainItemSettingsGUIWindow
 import net.spaceeye.smod.renderers.clientOnly.GhostBarRenderer
+import net.spaceeye.smod.utils.regC2S
 import net.spaceeye.smod.utils.regS2C
 import net.spaceeye.vmod.events.PersistentEvents
+import net.spaceeye.vmod.networking.Serializable
 import net.spaceeye.vmod.reflectable.AutoSerializable
+import net.spaceeye.vmod.reflectable.constructor
 import net.spaceeye.vmod.rendering.RenderingData
 import net.spaceeye.vmod.rendering.types.special.PrecisePlacementAssistRenderer
+import net.spaceeye.vmod.toolgun.ClientToolGunState
 import net.spaceeye.vmod.toolgun.modes.util.PositionModes
 import net.spaceeye.vmod.toolgun.modes.util.serverRaycast2PointsFnActivationBase
 import net.spaceeye.vmod.utils.EmptyPacket
 import net.spaceeye.vmod.utils.RaycastFunctions
 import net.spaceeye.vmod.utils.Vector3d
+import net.spaceeye.vmod.utils.WrapperPacket
 import net.spaceeye.vmod.vEntityManaging.VEntity
 import net.spaceeye.vmod.vEntityManaging.makeVEntity
+import org.lwjgl.glfw.GLFW
 import org.valkyrienskies.core.api.ships.ServerShip
 import org.valkyrienskies.core.api.ships.properties.ShipId
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 import kotlin.math.roundToInt
 
 //TODO think of a better name
 //TODO "Item" is common object, maybe use nbt to save changed data?
-abstract class TwoPointsItem(tab: CreativeModeTab, stacksTo: Int): Item(Properties().tab(tab).stacksTo(stacksTo)) {
-    var firstPos: RaycastFunctions.RaycastResult? = null
-    var clientPos: Vector3d? = null
+abstract class TwoPointsItem(tab: CreativeModeTab, stacksTo: Int): Item(Properties().tab(tab).stacksTo(stacksTo)), GUIBuilder {
+    class ItemData() {
+        var firstPos: RaycastFunctions.RaycastResult? = null
+        var syncData: Serializable? = null
+
+        inline fun <reified T: Serializable> getOrPlaceSyncData(): T {
+            return syncData?.let { it as T } ?: T::class.constructor()
+        }
+    }
+
+    private var clientPos: Vector3d? = null
+    open val cGhostWidth: Double get() = 1.0/8.0
 
     abstract fun makeVEntity(
         level: ServerLevel,
@@ -48,7 +70,26 @@ abstract class TwoPointsItem(tab: CreativeModeTab, stacksTo: Int): Item(Properti
         rr: RaycastFunctions.RaycastResult
     ): VEntity
 
-    override fun use(level: Level, player: Player, usedHand: InteractionHand): InteractionResultHolder<ItemStack> {
+    abstract fun getSyncData(): Serializable?
+    abstract fun setSyncData(data: FriendlyByteBuf, player: ServerPlayer)
+
+    private fun openGUI() {
+        Minecraft.getInstance().setScreen(MainItemSettingsGUIWindow(this))
+    }
+
+    @OptIn(ExperimentalContracts::class)
+    inline fun <R> withData(player: Player, fn: ItemData.() -> R): R {
+        contract {
+            callsInPlace(fn, InvocationKind.EXACTLY_ONCE)
+        }
+        return sPlayersItemData.getOrPut(player) { ItemData() }.fn()
+    }
+
+    inline fun <reified T: Serializable, R> withSync(player: Player, fn: T.() -> R): R = withData(player) {
+        return getOrPlaceSyncData<T>().fn()
+    }
+
+    override fun use(level: Level, player: Player, usedHand: InteractionHand): InteractionResultHolder<ItemStack> = withData(player) {
         if (usedHand != InteractionHand.MAIN_HAND) {return super.use(level, player, usedHand)}
 
         val raycast = RaycastFunctions.raycast(
@@ -56,6 +97,10 @@ abstract class TwoPointsItem(tab: CreativeModeTab, stacksTo: Int): Item(Properti
             RaycastFunctions.Source(Vector3d(player.lookAngle), Vector3d(player.eyePosition)),
             raycastDistance
         )
+
+        if (level.isClientSide && raycast.state.isAir && player.isShiftKeyDown) {
+            openGUI()
+        }
 
         if (raycast.state.isAir) {
             firstPos = null
@@ -88,9 +133,11 @@ abstract class TwoPointsItem(tab: CreativeModeTab, stacksTo: Int): Item(Properti
         const val raycastDistance = 7.0
         const val numPreciseSides = 7
 
-        var placementAssistRID = -1
-        var ghostBarRID = -1
-        var lastItemStack: ItemStack? = null
+        var cPlacementAssistRID = -1
+        var cGhostBarRID = -1
+        var cLastItemStack: ItemStack? = null
+
+        var sPlayersItemData = mutableMapOf<Player, ItemData>()
 
         data class S2CSendPos(var pos: Vector3d): AutoSerializable
 
@@ -102,30 +149,52 @@ abstract class TwoPointsItem(tab: CreativeModeTab, stacksTo: Int): Item(Properti
             val item = (Minecraft.getInstance().player?.mainHandItem?.item as? TwoPointsItem) ?: return@regS2C
             item.clientPos = null
         }
+        val c2sSyncItem = regC2S<WrapperPacket>("sync_item_data", "two_points_item") { pkt, player ->
+            val item = (player.mainHandItem?.item as? TwoPointsItem) ?: return@regC2S
+            try {
+                item.setSyncData(pkt.buf, player)
+            } catch (e: Exception) {
+                ELOG(e.stackTraceToString())
+            }
+        }
         init {
             PersistentEvents.clientOnTick.on { (minecraft), _ ->
                 val player = minecraft.player ?: return@on
                 val item = player.mainHandItem.item as? TwoPointsItem
-                if (item == null || player.mainHandItem != lastItemStack) {
-                    if (placementAssistRID != -1 || ghostBarRID != -1) {
-                        RenderingData.client.removeClientsideRenderer(placementAssistRID)
-                        RenderingData.client.removeClientsideRenderer(ghostBarRID)
-                        placementAssistRID = -1
-                        ghostBarRID = -1
+                if (item == null || player.mainHandItem != cLastItemStack) {
+                    if (cPlacementAssistRID != -1 || cGhostBarRID != -1) {
+                        RenderingData.client.removeClientsideRenderer(cPlacementAssistRID)
+                        RenderingData.client.removeClientsideRenderer(cGhostBarRID)
+                        cPlacementAssistRID = -1
+                        cGhostBarRID = -1
                     }
-                    lastItemStack = player.mainHandItem
+                    cLastItemStack = player.mainHandItem
                     return@on
                 }
-                if (placementAssistRID == -1) {
-                    placementAssistRID = RenderingData.client.addClientsideRenderer(
+                if (cPlacementAssistRID == -1) {
+                    cPlacementAssistRID = RenderingData.client.addClientsideRenderer(
                         PrecisePlacementAssistRenderer(numPreciseSides, raycastDistance) { true }
                     )
                 }
-                if (ghostBarRID == -1 && item.firstPos != null) {
-                    ghostBarRID = RenderingData.client.addClientsideRenderer(
-                        GhostBarRenderer({item.clientPos}, {player.mainHandItem.count.toDouble()}, raycastDistance, numPreciseSides)
+                if (cGhostBarRID == -1 && item.clientPos != null) {
+                    cGhostBarRID = RenderingData.client.addClientsideRenderer(
+                        GhostBarRenderer({item.clientPos}, {player.mainHandItem.count.toDouble()}, {item.cGhostWidth}, raycastDistance, numPreciseSides)
                     )
                 }
+            }
+
+            PersistentEvents.keyPress.on {
+                (keyCode, scanCode, action, modifiers), _ ->
+                if (action != GLFW.GLFW_PRESS) {return@on false}
+                if (Minecraft.getInstance().screen !is MainItemSettingsGUIWindow) {return@on false}
+                if (!ClientToolGunState.TOOLGUN_TOGGLE_HUD_KEY.matches(keyCode, scanCode) && keyCode != GLFW.GLFW_KEY_ESCAPE) { return@on false }
+
+                Minecraft.getInstance().setScreen(null)
+
+                val item = Minecraft.getInstance().player?.mainHandItem?.item as? TwoPointsItem ?: return@on true
+                item.getSyncData()?.also { c2sSyncItem.sendToServer(WrapperPacket(it)) }
+
+                return@on true
             }
         }
     }
