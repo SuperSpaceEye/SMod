@@ -28,6 +28,7 @@ import org.valkyrienskies.core.api.ships.properties.ShipId
 import kotlin.math.roundToInt
 
 //TODO think of a better name
+//TODO "Item" is common object, maybe use nbt to save changed data?
 abstract class TwoPointsItem(tab: CreativeModeTab, stacksTo: Int): Item(Properties().tab(tab).stacksTo(stacksTo)) {
     var firstPos: RaycastFunctions.RaycastResult? = null
     var clientPos: Vector3d? = null
@@ -89,28 +90,30 @@ abstract class TwoPointsItem(tab: CreativeModeTab, stacksTo: Int): Item(Properti
 
         var placementAssistRID = -1
         var ghostBarRID = -1
+        var lastItemStack: ItemStack? = null
 
         data class S2CSendPos(var pos: Vector3d): AutoSerializable
 
         val s2cSendPos = regS2C<S2CSendPos>("send_pos", "two_points_item") { pkt ->
-            val item = (Minecraft.getInstance().player?.mainHandItem?.item as? RopeItem) ?: return@regS2C
+            val item = (Minecraft.getInstance().player?.mainHandItem?.item as? TwoPointsItem) ?: return@regS2C
             item.clientPos = pkt.pos
         }
         val s2cResetPos = regS2C<EmptyPacket>("reset_pos", "two_points_item") {
-            val item = (Minecraft.getInstance().player?.mainHandItem?.item as? RopeItem) ?: return@regS2C
+            val item = (Minecraft.getInstance().player?.mainHandItem?.item as? TwoPointsItem) ?: return@regS2C
             item.clientPos = null
         }
         init {
             PersistentEvents.clientOnTick.on { (minecraft), _ ->
                 val player = minecraft.player ?: return@on
                 val item = player.mainHandItem.item as? TwoPointsItem
-                if (item == null) {
+                if (item == null || player.mainHandItem != lastItemStack) {
                     if (placementAssistRID != -1 || ghostBarRID != -1) {
                         RenderingData.client.removeClientsideRenderer(placementAssistRID)
                         RenderingData.client.removeClientsideRenderer(ghostBarRID)
                         placementAssistRID = -1
                         ghostBarRID = -1
                     }
+                    lastItemStack = player.mainHandItem
                     return@on
                 }
                 if (placementAssistRID == -1) {
