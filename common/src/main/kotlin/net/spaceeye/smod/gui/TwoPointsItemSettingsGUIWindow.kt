@@ -8,9 +8,12 @@ import gg.essential.elementa.constraints.CenterConstraint
 import gg.essential.elementa.dsl.childOf
 import gg.essential.elementa.dsl.constrain
 import gg.essential.elementa.dsl.percent
+import net.minecraft.client.Minecraft
+import net.spaceeye.smod.items.TwoPointsItem
+import net.spaceeye.smod.items.TwoPointsItem.ItemData.Companion.fromTag
 import java.awt.Color
 
-class MainItemSettingsGUIWindow(item: GUIBuilder): WindowScreen(ElementaVersion.V8) {
+class TwoPointsItemSettingsGUIWindow(item: TwoPointsItem): WindowScreen(ElementaVersion.V8) {
     private val mainWindow = UIBlock(Color(240, 240, 240)).constrain {
         x = CenterConstraint()
         y = CenterConstraint()
@@ -27,7 +30,9 @@ class MainItemSettingsGUIWindow(item: GUIBuilder): WindowScreen(ElementaVersion.
         height = 100.percent()
     } childOf mainWindow
 
+    val data = item.getSyncData()!!.fromTag(Minecraft.getInstance().player!!.mainHandItem.orCreateTag)
+
     init {
-        item.makeGUISettings(scrollComponent)
+        item.makeGUISettings(scrollComponent, data)
     }
 }

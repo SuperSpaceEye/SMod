@@ -7,7 +7,7 @@ import net.spaceeye.vmod.utils.Vector3d
 import net.spaceeye.vmod.vEntityManaging.util.ExtendableVEntity
 import org.valkyrienskies.core.api.ships.properties.ShipId
 
-class SModPhysRopeWrenchable(override var numItems: Int): SModWrenchable {
+class SModPhysRopeWrenchable(override var numItems: Int = 0): SModWrenchable {
     override fun getItemStack(): ItemStack {
         return ItemStack(SItems.PHYS_ROPE.get(), numItems)
     }
