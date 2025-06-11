@@ -19,6 +19,7 @@ import net.spaceeye.vmod.utils.Vector3d
 import net.spaceeye.vmod.vEntityManaging.VEntity
 import net.spaceeye.vmod.vEntityManaging.extensions.PhysRopeRenderable
 import net.spaceeye.vmod.vEntityManaging.types.constraints.PhysRopeConstraint
+import org.joml.Quaterniond
 import org.valkyrienskies.core.api.ships.ServerShip
 import org.valkyrienskies.core.api.ships.properties.ShipId
 import java.awt.Color
@@ -34,7 +35,7 @@ class PhysRopeItem: TwoPointsItem(SItems.TAB, 64) {
 
     override val cGhostWidth: Double get() = withSync<Data, Double>(Minecraft.getInstance().player!!.mainHandItem.orCreateTag) { radius }
 
-    override fun makeVEntity(data: ItemData, level: ServerLevel, shipId1: ShipId, shipId2: ShipId, ship1: ServerShip?, ship2: ServerShip?, sPos1: Vector3d, sPos2: Vector3d, rPos1: Vector3d, rPos2: Vector3d, length: Double, pr: RaycastFunctions.RaycastResult, rr: RaycastFunctions.RaycastResult): VEntity
+    override fun makeVEntity(data: ItemData, level: ServerLevel, shipId1: ShipId, shipId2: ShipId, ship1: ServerShip?, ship2: ServerShip?, sPos1: Vector3d, sPos2: Vector3d, rPos1: Vector3d, rPos2: Vector3d, sDir1: Vector3d, sDir2: Vector3d, sRot1: Quaterniond, sRot2: Quaterniond, length: Double, pr: RaycastFunctions.RaycastResult, rr: RaycastFunctions.RaycastResult): VEntity
     = with(data.getOrPutSyncData<Data>()) {
         val sDir1 = pr.globalNormalDirection!!
         val sDir2 = rr.globalNormalDirection!!

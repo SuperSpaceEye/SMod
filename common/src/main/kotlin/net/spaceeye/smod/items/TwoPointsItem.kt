@@ -35,8 +35,10 @@ import net.spaceeye.vmod.utils.Vector3d
 import net.spaceeye.vmod.utils.WrapperPacket
 import net.spaceeye.vmod.utils.getMyVector3d
 import net.spaceeye.vmod.utils.putMyVector3d
+import net.spaceeye.vmod.utils.vs.transformDirectionWorldToShip
 import net.spaceeye.vmod.vEntityManaging.VEntity
 import net.spaceeye.vmod.vEntityManaging.makeVEntity
+import org.joml.Quaterniond
 import org.lwjgl.glfw.GLFW
 import org.valkyrienskies.core.api.ships.ServerShip
 import org.valkyrienskies.core.api.ships.properties.ShipId
@@ -123,7 +125,7 @@ abstract class TwoPointsItem(tab: CreativeModeTab, stacksTo: Int): Item(Properti
     private val clientPos: Vector3d? get() = Minecraft.getInstance().player!!.mainHandItem.orCreateTag.get("firstPos")?.let { it as? CompoundTag }?.getMyVector3dNullable("globalHitPos")
     open val cGhostWidth: Double get() = 1.0/8.0
 
-    abstract fun makeVEntity(data: ItemData, level: ServerLevel, shipId1: ShipId, shipId2: ShipId, ship1: ServerShip?, ship2: ServerShip?, sPos1: Vector3d, sPos2: Vector3d, rPos1: Vector3d, rPos2: Vector3d, length: Double, pr: RaycastFunctions.RaycastResult, rr: RaycastFunctions.RaycastResult): VEntity
+    abstract fun makeVEntity(data: ItemData, level: ServerLevel, shipId1: ShipId, shipId2: ShipId, ship1: ServerShip?, ship2: ServerShip?, sPos1: Vector3d, sPos2: Vector3d, rPos1: Vector3d, rPos2: Vector3d, sDir1: Vector3d, sDir2: Vector3d, sRot1: Quaterniond, sRot2: Quaterniond, length: Double, pr: RaycastFunctions.RaycastResult, rr: RaycastFunctions.RaycastResult): VEntity
 
     abstract fun getSyncData(): TagAndByteAutoSerializable?
     abstract fun setSyncData(data: FriendlyByteBuf, tag: CompoundTag)
@@ -156,15 +158,23 @@ abstract class TwoPointsItem(tab: CreativeModeTab, stacksTo: Int): Item(Properti
             raycastDistance
         )
 
-        if (level.isClientSide && raycast.state.isAir && player.isShiftKeyDown) {
-            openGUI()
-        }
-
-        //TODO maybe just air to clear first pos, and air + shift to remove tag?
+        //TODO this is dumb. first part is fine, but menu should be opened with a keybind.
+        // also another keybind to cycle modes? (connection mode normal/placement assist/join)
         if (raycast.state.isAir) {
-            firstPos = null
-            if (!level.isClientSide) { syncData = null }
+            if (player.isShiftKeyDown) {
+                firstPos = null
+                syncData = null
+            } else {
+                firstPos = null
+            }
             return@withData InteractionResultHolder.consume<ItemStack>(player.mainHandItem)
+        } else {
+            if (player.isShiftKeyDown) {
+                if (level.isClientSide) {
+                    openGUI()
+                }
+                return@withData InteractionResultHolder.consume<ItemStack>(player.mainHandItem)
+            }
         }
 
         if (level.isClientSide) {return@withData super.use(level, player, usedHand)}
@@ -188,8 +198,14 @@ abstract class TwoPointsItem(tab: CreativeModeTab, stacksTo: Int): Item(Properti
                 firstPos = null
                 return@serverRaycast2PointsFnActivationBase null
             }
+            val wDir = (rPos1 - rPos2).normalize()
+            val sDir1 = ship1?.let { transformDirectionWorldToShip(it, wDir) } ?: wDir.copy()
+            val sDir2 = ship2?.let { transformDirectionWorldToShip(it, wDir) } ?: wDir.copy()
 
-            level.makeVEntity(makeVEntity(this, level, shipId1, shipId2, ship1, ship2, sPos1, sPos2, rPos1, rPos2, length, pr, cr))
+            val sRot1 = Quaterniond(ship1?.transform?.shipToWorldRotation ?: Quaterniond())
+            val sRot2 = Quaterniond(ship2?.transform?.shipToWorldRotation ?: Quaterniond())
+
+            level.makeVEntity(makeVEntity(this, level, shipId1, shipId2, ship1, ship2, sPos1, sPos2, rPos1, rPos2, sDir1, sDir2, sRot1, sRot2, length, pr, cr))
             firstPos = null
             InteractionResultHolder.consume<ItemStack>(player.mainHandItem.also { it.count -= length.roundToInt() })
         } ?: super.use(level, player, usedHand)
