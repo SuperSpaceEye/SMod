@@ -32,6 +32,7 @@ object SItems {
     var CONNECTION_ITEM = ITEMS.register("connection_item") { ConnectionItem() }
 
     fun register() {
+        SBlocks.registerItems(ITEMS)
         ITEMS.register()
     }
 }
