@@ -33,7 +33,7 @@ dependencies {
 
     runtimeOnly(("gg.essential:elementa:${rootProject.elementaVersion}")) {transitive false}
     modRuntimeOnly("gg.essential:universalcraft-1.18.1-fabric:${rootProject.ucVersion}") {transitive false}
-    modRuntimeOnly("net.spaceeye:valkyrien-ship-schematics-$project.name:1.18.2-1.2") {transitive false}
+    modRuntimeOnly("net.spaceeye:valkyrien-ship-schematics-$project.name:$project.vssVersion") {transitive false}
     runtimeOnly("org.jgrapht:jgrapht-core:1.5.2") {transitive false}
 
     api 'org.joml:joml-primitives:1.10.0'

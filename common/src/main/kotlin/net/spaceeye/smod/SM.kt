@@ -20,7 +20,7 @@ object SM {
     @JvmStatic
     fun init() {
         if (Platform.isDevelopmentEnvironment()) {
-            VM.STUPID_FUCKING_THING_DOESNT_WORK = true
+//            VM.STUPID_FUCKING_THING_DOESNT_WORK = true
         }
         SModVEntityExtensions
 

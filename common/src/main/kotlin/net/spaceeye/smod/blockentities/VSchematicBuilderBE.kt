@@ -17,13 +17,13 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.Container
 import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.BlockState
 import net.spaceeye.smod.ELOG
 import net.spaceeye.smod.SBlockEntities
 import net.spaceeye.smod.SM
 import net.spaceeye.smod.utils.regC2S
-import net.spaceeye.valkyrien_ship_schematics.interfaces.IShipSchematic
 import net.spaceeye.valkyrien_ship_schematics.interfaces.v1.IShipSchematicDataV1
 import net.spaceeye.vmod.VMConfig
 import net.spaceeye.vmod.events.PersistentEvents
@@ -34,6 +34,7 @@ import net.spaceeye.vmod.networking.FakePacketContext
 import net.spaceeye.vmod.networking.Serializable
 import net.spaceeye.vmod.reflectable.AutoSerializable
 import net.spaceeye.vmod.reflectable.constructor
+import net.spaceeye.vmod.schematic.PasteSchematicSettings
 import net.spaceeye.vmod.schematic.VModShipSchematicV2
 import net.spaceeye.vmod.schematic.placeAt
 import net.spaceeye.vmod.toolgun.ClientToolGunState
@@ -41,6 +42,8 @@ import net.spaceeye.vmod.toolgun.modes.state.PlayerSchematics
 import net.spaceeye.vmod.translate.LOAD
 import net.spaceeye.vmod.translate.get
 import net.spaceeye.vmod.utils.Either
+import net.spaceeye.vmod.utils.Tuple
+import net.spaceeye.vmod.utils.Tuple3
 import net.spaceeye.vmod.utils.Vector3d
 import net.spaceeye.vmod.utils.onServerTick
 import org.joml.Quaterniond
@@ -181,7 +184,7 @@ class VSchematicBuilderMenu(val level: ClientLevel, val pos: BlockPos): WindowSc
         height = 90.percent
     } childOf window
 
-    val loadingText = makeText("It's loading bruh", Color.BLACK, 2f, 2f, screen)
+    val loadingText = makeText("Loading...", Color.BLACK, 2f, 2f, screen)
 
     val itemsScroll = ScrollComponent().constrain {
         x = 2.pixels
@@ -274,9 +277,11 @@ class VSchematicBuilderMenu(val level: ClientLevel, val pos: BlockPos): WindowSc
 }
 
 class VSchematicBuilderBE(pos: BlockPos, state: BlockState): BlockEntity(SBlockEntities.VSCHEMATIC_BUILDER.get(), pos, state) {
+    //TODO do i want to save schematics? I probably do, but if i ser/deser tags directly it would be very easy to load shitload of schems to inflate world size.
+    // maybe have "schematic holder" that will hold all load schematics, and only have references in block entities?
     var schematic: VModShipSchematicV2? = null
 
-    fun buildSchematic(player: ServerPlayer) {
+    fun buildSchematic(player: ServerPlayer?) {
         val schematic = schematic ?: return
         val level = level as ServerLevel
 
@@ -285,26 +290,7 @@ class VSchematicBuilderBE(pos: BlockPos, state: BlockState): BlockEntity(SBlockE
         if (containers.isEmpty()) {return}
 
         val required = schematicToRequirementsMap(schematic).toMutableMap()
-        val verification = required.toMap().toMutableMap()
-
-        containers.forEach {
-            for (i in 0 until it.containerSize) {
-                val stack = it.getItem(i)
-
-                verification[stack.item]?.also { vn ->
-                    val new = vn - stack.count
-                    if (new <= 0) {
-                        verification.remove(stack.item)
-                        return@also
-                    }
-                    verification[stack.item] = new
-                }
-
-                if (verification.isEmpty()) {return@forEach}
-            }
-        }
-
-        if (verification.isNotEmpty()) {return}
+        val cache = mutableListOf<Tuple3<Container, Int, Int>>()
 
         containers.forEach {
             for (i in 0 until it.containerSize) {
@@ -312,13 +298,9 @@ class VSchematicBuilderBE(pos: BlockPos, state: BlockState): BlockEntity(SBlockE
 
                 required[stack.item]?.also { vn ->
                     val new = vn - stack.count
-                    val remainder = stack.count - vn
+                    val remainder = (stack.count - vn).coerceAtLeast(0)
 
-                    if (remainder > 0) {
-                        val newStack = stack.copy()
-                        newStack.count = remainder
-                        it.setItem(i, newStack)
-                    }
+                    cache.add(Tuple.of(it, i, remainder))
 
                     if (new <= 0) {
                         required.remove(stack.item)
@@ -331,9 +313,21 @@ class VSchematicBuilderBE(pos: BlockPos, state: BlockState): BlockEntity(SBlockE
             }
         }
 
+        if (required.isNotEmpty()) {return}
+
+        cache.forEach { (container, position, amount) ->
+            when {
+                amount <= 0 -> container.setItem(position, ItemStack.EMPTY)
+                else        -> container.setItem(position, container.getItem(position).copy().also { it.count = amount })
+            }
+        }
+
         val pos = Vector3d(blockPos) + 0.5 + Vector3d(schematic.info!!.maxObjectPos) * Vector3d(0, 1, 0) + Vector3d(0, 3, 0)
 
-        schematic.placeAt(level, player, player.uuid, pos.toJomlVector3d(), Quaterniond()) {
+        //TODO not sure if i like it
+        schematic.placeAt(level, player, player?.uuid ?: UUID(0L, 0L), pos.toJomlVector3d(), Quaterniond(),
+            PasteSchematicSettings(false, false, logger = SM.logger, nonfatalErrorsHandler = { numErrors, _, _ -> ELOG("zamn, $numErrors errors...")})
+        ) {
             ELOG("absolute cinema")
         }
     }
