@@ -29,6 +29,7 @@ import net.spaceeye.vmod.rendering.RenderingData
 import net.spaceeye.vmod.rendering.types.special.PrecisePlacementAssistRenderer
 import net.spaceeye.vmod.toolgun.ClientToolGunState
 import net.spaceeye.vmod.toolgun.modes.util.PositionModes
+import net.spaceeye.vmod.toolgun.modes.util.getModePosition
 import net.spaceeye.vmod.toolgun.modes.util.serverRaycast2PointsFnActivationBase
 import net.spaceeye.vmod.utils.RaycastFunctions
 import net.spaceeye.vmod.utils.Vector3d
@@ -58,6 +59,8 @@ fun RaycastFunctions.RaycastResult.toTag(): CompoundTag {
         globalHitPos?.let { t.putMyVector3d("globalHitPos", it) }
         worldCenteredHitPos?.let { t.putMyVector3d("worldCenteredHitPos", it) }
         globalCenteredHitPos?.let { t.putMyVector3d("globalCenteredHitPos", it) }
+        worldCenteredFaceHitPos?.let { t.putMyVector3d("worldCenteredFaceHitPos", it) }
+        globalCenteredFaceHitPos?.let { t.putMyVector3d("globalCenteredFaceHitPos", it) }
         hitNormal?.let { t.putMyVector3d("hitNormal", it) }
         worldNormalDirection?.let { t.putMyVector3d("worldNormalDirection", it) }
         globalNormalDirection?.let { t.putMyVector3d("globalNormalDirection", it) }
@@ -87,6 +90,8 @@ fun raycastResultFromTag(t: CompoundTag): RaycastFunctions.RaycastResult {
         t.getMyVector3dNullable("globalHitPos"),
         t.getMyVector3dNullable("worldCenteredHitPos"),
         t.getMyVector3dNullable("globalCenteredHitPos"),
+        t.getMyVector3dNullable("worldCenteredFaceHitPos"),
+        t.getMyVector3dNullable("globalCenteredFaceHitPos"),
         t.getMyVector3dNullable("hitNormal"),
         t.getMyVector3dNullable("worldNormalDirection"),
         t.getMyVector3dNullable("globalNormalDirection"),
@@ -122,8 +127,9 @@ abstract class TwoPointsItem(tab: CreativeModeTab, stacksTo: Int): Item(Properti
     }
     abstract fun syncDataConstructor(): TagAndByteAutoSerializable
 
-    private val clientPos: Vector3d? get() = Minecraft.getInstance().player!!.mainHandItem.orCreateTag.get("firstPos")?.let { it as? CompoundTag }?.getMyVector3dNullable("globalHitPos")
+    private val clientPos: Vector3d? get() = Minecraft.getInstance().player!!.mainHandItem.orCreateTag.get("firstPos")?.let { raycastResultFromTag(it as CompoundTag) }?.let { getModePosition(cPosMode, it, numPreciseSides) }
     open val cGhostWidth: Double get() = 1.0/8.0
+    open val cPosMode: PositionModes get() = PositionModes.PRECISE_PLACEMENT
 
     abstract fun makeVEntity(data: ItemData, level: ServerLevel, shipId1: ShipId, shipId2: ShipId, ship1: ServerShip?, ship2: ServerShip?, sPos1: Vector3d, sPos2: Vector3d, rPos1: Vector3d, rPos2: Vector3d, sDir1: Vector3d, sDir2: Vector3d, sRot1: Quaterniond, sRot2: Quaterniond, length: Double, pr: RaycastFunctions.RaycastResult, rr: RaycastFunctions.RaycastResult): VEntity
 
@@ -181,7 +187,7 @@ abstract class TwoPointsItem(tab: CreativeModeTab, stacksTo: Int): Item(Properti
         level as ServerLevel
         player as ServerPlayer
 
-        return@withData serverRaycast2PointsFnActivationBase(PositionModes.PRECISE_PLACEMENT, numPreciseSides, level, raycast, {
+        return@withData serverRaycast2PointsFnActivationBase(cPosMode, numPreciseSides, level, raycast, {
             nr ->
             firstPos?.let {
                 Pair(true, it.also {
@@ -243,12 +249,12 @@ abstract class TwoPointsItem(tab: CreativeModeTab, stacksTo: Int): Item(Properti
                 }
                 if (cPlacementAssistRID == -1) {
                     cPlacementAssistRID = RenderingData.client.addClientsideRenderer(
-                        PrecisePlacementAssistRenderer(numPreciseSides, raycastDistance) { true }
+                        PrecisePlacementAssistRenderer(numPreciseSides, raycastDistance) { item.cPosMode == PositionModes.PRECISE_PLACEMENT }
                     )
                 }
                 if (cGhostBarRID == -1 && item.clientPos != null) {
                     cGhostBarRID = RenderingData.client.addClientsideRenderer(
-                        GhostBarRenderer({item.clientPos}, {player.mainHandItem.count.toDouble()}, {item.cGhostWidth}, raycastDistance, numPreciseSides)
+                        GhostBarRenderer({item.clientPos}, {player.mainHandItem.count.toDouble()}, {item.cGhostWidth}, {item.cPosMode}, raycastDistance, numPreciseSides)
                     )
                 }
             }

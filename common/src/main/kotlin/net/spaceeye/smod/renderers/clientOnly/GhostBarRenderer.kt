@@ -8,10 +8,11 @@ import net.minecraft.client.Camera
 import net.minecraft.client.Minecraft
 import net.minecraft.client.renderer.LightTexture
 import net.minecraft.network.FriendlyByteBuf
-import net.spaceeye.vmod.rendering.RenderTypes
+import net.spaceeye.vmod.rendering.RenderSetups
 import net.spaceeye.vmod.rendering.RenderingUtils
 import net.spaceeye.vmod.rendering.types.BaseRenderer
-import net.spaceeye.vmod.toolgun.modes.util.calculatePrecise
+import net.spaceeye.vmod.toolgun.modes.util.PositionModes
+import net.spaceeye.vmod.toolgun.modes.util.getModePosition
 import net.spaceeye.vmod.utils.RaycastFunctions
 import net.spaceeye.vmod.utils.Vector3d
 import net.spaceeye.vmod.utils.vs.posShipToWorldRender
@@ -25,6 +26,7 @@ class GhostBarRenderer(
     val pos: () -> Vector3d?,
     val maxDistance: () -> Double,
     val width: () -> Double,
+    val mode: () -> PositionModes,
     val raycastDistance: Double,
     val numPreciseSides: Int
 ): BaseRenderer() {
@@ -46,7 +48,7 @@ class GhostBarRenderer(
 
         val sPos2 = if (rr.state.isAir) {
             Vector3d(player.eyePosition) + Vector3d(player.lookAngle) * raycastDistance
-        } else { calculatePrecise(rr, numPreciseSides) }
+        } else { getModePosition(mode(), rr, numPreciseSides) }
 
         val ship1 = level.getShipManagingPos(sPos1.x, sPos1.y, sPos1.z) as? ClientShip
         val ship2 = level.getShipManagingPos(sPos2.x, sPos2.y, sPos2.z) as? ClientShip
@@ -63,7 +65,7 @@ class GhostBarRenderer(
         val tesselator = Tesselator.getInstance()
         val vBuffer = tesselator.builder
 
-        vBuffer.begin(VertexFormat.Mode.QUADS, RenderTypes.setupFullRendering())
+        vBuffer.begin(VertexFormat.Mode.QUADS, RenderSetups.setupFullRendering())
         RenderSystem.setShaderTexture(0, RenderingUtils.whiteTexture)
         poseStack.pushPose()
 
@@ -77,7 +79,7 @@ class GhostBarRenderer(
 
         poseStack.popPose()
         tesselator.end()
-        RenderTypes.clearFullRendering()
+        RenderSetups.clearFullRendering()
     }
 
     override fun copy(oldToNew: Map<ShipId, Ship>, centerPositions: Map<ShipId, Pair<Vector3d, Vector3d>>): BaseRenderer? = throw AssertionError()

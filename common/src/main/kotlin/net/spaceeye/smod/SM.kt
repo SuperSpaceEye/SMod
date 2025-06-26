@@ -1,10 +1,7 @@
 package net.spaceeye.smod
 
-import dev.architectury.platform.Platform
-import net.spaceeye.smod.blockentities.VSchematicBuilderMenu
 import net.spaceeye.smod.blockentities.VSchematicBuilderNetworking
 import net.spaceeye.smod.vEntityExtensions.SModVEntityExtensions
-import net.spaceeye.vmod.VM
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
@@ -19,9 +16,6 @@ object SM {
 
     @JvmStatic
     fun init() {
-        if (Platform.isDevelopmentEnvironment()) {
-//            VM.STUPID_FUCKING_THING_DOESNT_WORK = true
-        }
         SModVEntityExtensions
 
         SBlocks.register()

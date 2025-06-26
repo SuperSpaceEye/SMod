@@ -30,7 +30,7 @@ class WrenchItem: Item(Properties().tab(SItems.TAB).stacksTo(1)) {
             .toSet()
             .mapNotNull { level.getVEntity(it) as? ExtendableVEntity }
             .filter { it.getExtensionsOfType<SModWrenchable>().isNotEmpty() }
-            .filter { it.getAttachmentPoints(-1).any { (it - cPos).dist() <= 0.5 } }
+            .filter { it.getAttachmentPoints(-1).any { (it - cPos).dist() <= 0.6 } }
         if (ventities.isEmpty()) {return super.useOn(context)}
 
         val pos = Vector3d(context.clickedPos) + 0.5 + Vector3d(context.clickedFace.normal.toJOMLD()) * 0.5

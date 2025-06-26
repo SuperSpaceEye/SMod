@@ -11,3 +11,6 @@
 * block that builds vschems in survival
 
 * Maybe 3d rendering (just a box or smth) with textures for Connection/Rope/Hydraulics
+
+# Do this before release or smth idk
+* define server limits for every item
