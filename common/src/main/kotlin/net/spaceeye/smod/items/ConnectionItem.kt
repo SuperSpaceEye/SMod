@@ -13,14 +13,15 @@ import net.spaceeye.vmod.guiElements.makeDropDown
 import net.spaceeye.vmod.guiElements.makeTextEntry
 import net.spaceeye.vmod.limits.ClientLimits
 import net.spaceeye.vmod.reflectable.ByteSerializableItem.get
+import net.spaceeye.vmod.rendering.RenderingUtils
 import net.spaceeye.vmod.rendering.types.RopeRenderer
 import net.spaceeye.vmod.toolgun.modes.util.PositionModes
+import net.spaceeye.vmod.translate.BEARING
 import net.spaceeye.vmod.translate.CENTERED_IN_BLOCK
 import net.spaceeye.vmod.translate.CENTERED_ON_SIDE
 import net.spaceeye.vmod.translate.CONNECTION_MODES
-import net.spaceeye.vmod.translate.FIXED_ORIENTATION
-import net.spaceeye.vmod.translate.FREE_ORIENTATION
-import net.spaceeye.vmod.translate.HINGE_ORIENTATION
+import net.spaceeye.vmod.translate.FIXED
+import net.spaceeye.vmod.translate.FREE
 import net.spaceeye.vmod.translate.HITPOS_MODES
 import net.spaceeye.vmod.translate.NORMAL
 import net.spaceeye.vmod.translate.PRECISE_PLACEMENT
@@ -54,7 +55,7 @@ class ConnectionItem: TwoPointsItem(SItems.TAB, 64) {
     = with(data.getOrPutSyncData<Data>()) {
         return@with ConnectionConstraint(sPos1, sPos2, sDir1, sDir2, sRot1, sRot2, shipId1, shipId2, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, (rPos1 - rPos2).dist().toFloat(),
             mode)
-            .addExtension(RenderableExtension(RopeRenderer(shipId1, shipId2, sPos1, sPos2, length.toDouble(), width, length.roundToInt(), false)))
+            .addExtension(RenderableExtension(RopeRenderer(shipId1, shipId2, sPos1, sPos2, length.toDouble(), width, length.roundToInt(), false, RenderingUtils.ropeTexture)))
             .addExtension(SModRopeWrenchable(length.roundToInt()))
     }
 
@@ -62,9 +63,9 @@ class ConnectionItem: TwoPointsItem(SItems.TAB, 64) {
         makeTextEntry(WIDTH.get(), ::width, 2f, 2f, parentWindow, ClientLimits.instance.ropeRendererWidth)
         makeDropDown(CONNECTION_MODES.get(), parentWindow, 2f, 2f,
             listOf(
-                DItem(FIXED_ORIENTATION.get(), mode == ConnectionModes.FIXED_ORIENTATION) {mode = ConnectionModes.FIXED_ORIENTATION},
-                DItem(HINGE_ORIENTATION.get(), mode == ConnectionModes.HINGE_ORIENTATION) {mode = ConnectionModes.HINGE_ORIENTATION},
-                DItem(FREE_ORIENTATION .get(), mode == ConnectionModes.FREE_ORIENTATION ) {mode = ConnectionModes.FREE_ORIENTATION },
+                DItem(FIXED  .get(), mode == ConnectionModes.FIXED_ORIENTATION) {mode = ConnectionModes.FIXED_ORIENTATION},
+                DItem(BEARING.get(), mode == ConnectionModes.HINGE_ORIENTATION) {mode = ConnectionModes.HINGE_ORIENTATION},
+                DItem(FREE   .get(), mode == ConnectionModes.FREE_ORIENTATION ) {mode = ConnectionModes.FREE_ORIENTATION },
                 ))
 
         makeDropDown(HITPOS_MODES.get(), parentWindow, 2f, 2f, listOf(

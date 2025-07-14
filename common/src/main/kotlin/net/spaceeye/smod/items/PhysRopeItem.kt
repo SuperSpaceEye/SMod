@@ -13,6 +13,7 @@ import net.spaceeye.vmod.guiElements.makeDropDown
 import net.spaceeye.vmod.guiElements.makeTextEntry
 import net.spaceeye.vmod.limits.ServerLimits
 import net.spaceeye.vmod.reflectable.ByteSerializableItem.get
+import net.spaceeye.vmod.rendering.RenderingUtils
 import net.spaceeye.vmod.rendering.types.PhysRopeRenderer
 import net.spaceeye.vmod.toolgun.modes.util.PositionModes
 import net.spaceeye.vmod.translate.ANGLE_LIMIT
@@ -70,7 +71,7 @@ class PhysRopeItem: TwoPointsItem(SItems.TAB, 64) {
         }
 
         return@with PhysRopeConstraint(sPos1, sPos2, sDir1, sDir2, shipId1, shipId2, Float.MAX_VALUE, Float.MAX_VALUE, length.toFloat(), length.roundToInt(), 50.0, radius, Math.toRadians(angleLimit))
-            .addExtension(PhysRopeRenderable(PhysRopeRenderer(shipId1, shipId2, sPos1, sPos2, up1, up2, right1, right2, Color(255, 255, 255), length.roundToInt(), false, listOf())))
+            .addExtension(PhysRopeRenderable(PhysRopeRenderer(shipId1, shipId2, sPos1, sPos2, up1, up2, right1, right2, Color(255, 255, 255), length.roundToInt(), false, listOf(), RenderingUtils.ropeTexture)))
             .addExtension(SModPhysRopeWrenchable(length.roundToInt()))
     }
 

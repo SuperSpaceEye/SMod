@@ -29,11 +29,11 @@ repositories {
 }
 
 dependencies {
-    modRuntimeOnly(files("jars/VMod-Fabric-1.18.2-1.3.0.jar"))
+    modRuntimeOnly(files("jars/VMod-Fabric-1.18.2-1.6.1.jar"))
 
     runtimeOnly(("gg.essential:elementa:${rootProject.elementaVersion}")) {transitive false}
     modRuntimeOnly("gg.essential:universalcraft-1.18.1-fabric:${rootProject.ucVersion}") {transitive false}
-    modRuntimeOnly("net.spaceeye:valkyrien-ship-schematics-$project.name:$project.vssVersion") {transitive false}
+    modRuntimeOnly("net.spaceeye:valkyrien-ship-schematics-$project.minecraft_version-$project.name:$project.vss_version") {transitive false}
     runtimeOnly("org.jgrapht:jgrapht-core:1.5.2") {transitive false}
 
     api 'org.joml:joml-primitives:1.10.0'

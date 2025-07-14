@@ -16,6 +16,7 @@ import net.spaceeye.vmod.guiElements.makeDropDown
 import net.spaceeye.vmod.guiElements.makeTextEntry
 import net.spaceeye.vmod.limits.ClientLimits
 import net.spaceeye.vmod.reflectable.ByteSerializableItem.get
+import net.spaceeye.vmod.rendering.RenderingUtils
 import net.spaceeye.vmod.rendering.types.RopeRenderer
 import net.spaceeye.vmod.rendering.types.TubeRopeRenderer
 import net.spaceeye.vmod.toolgun.modes.util.PositionModes
@@ -74,8 +75,8 @@ class RopeItem: TwoPointsItem(SItems.TAB, 64) {
         return@with RopeConstraint(sPos1, sPos2, shipId1, shipId2, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, (rPos1 - rPos2).dist().toFloat())
             .addExtension(RenderableExtension(
                 when(useTubeRenderer) {
-                    true  -> TubeRopeRenderer(shipId1, shipId2, sPos1, sPos2, up1, up2, right1, right2, length, Color.WHITE, width, sides, segments, false, lerpBetweenRotations, onTheOutside)
-                    false -> RopeRenderer(shipId1, shipId2, sPos1, sPos2, length, width, segments, false)
+                    true  -> TubeRopeRenderer(shipId1, shipId2, sPos1, sPos2, up1, up2, right1, right2, length, Color.WHITE, width, sides, segments, false, lerpBetweenRotations, onTheOutside, RenderingUtils.ropeTexture)
+                    false -> RopeRenderer(shipId1, shipId2, sPos1, sPos2, length, width, segments, false, RenderingUtils.ropeTexture)
                 }
             ))
             .addExtension(SModRopeWrenchable(length.roundToInt()))

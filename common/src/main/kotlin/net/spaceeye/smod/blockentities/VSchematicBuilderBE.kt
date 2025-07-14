@@ -16,6 +16,7 @@ import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.Container
+import net.minecraft.world.entity.item.ItemEntity
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.entity.BlockEntity
@@ -34,7 +35,7 @@ import net.spaceeye.vmod.networking.FakePacketContext
 import net.spaceeye.vmod.networking.Serializable
 import net.spaceeye.vmod.reflectable.AutoSerializable
 import net.spaceeye.vmod.reflectable.constructor
-import net.spaceeye.vmod.schematic.PasteSchematicSettings
+import net.spaceeye.vmod.schematic.SchematicActionsQueue.PasteSchematicSettings
 import net.spaceeye.vmod.schematic.VModShipSchematicV2
 import net.spaceeye.vmod.schematic.placeAt
 import net.spaceeye.vmod.toolgun.ClientToolGunState
@@ -56,6 +57,7 @@ import java.util.Locale
 import java.util.UUID
 import kotlin.collections.component1
 import kotlin.collections.component2
+import kotlin.math.min
 
 const val PLAYER_REACH = 7.0
 
@@ -290,6 +292,7 @@ class VSchematicBuilderBE(pos: BlockPos, state: BlockState): BlockEntity(SBlockE
         if (containers.isEmpty()) {return}
 
         val required = schematicToRequirementsMap(schematic).toMutableMap()
+        val notConsumed = required.toMutableMap()
         val cache = mutableListOf<Tuple3<Container, Int, Int>>()
 
         containers.forEach {
@@ -326,9 +329,57 @@ class VSchematicBuilderBE(pos: BlockPos, state: BlockState): BlockEntity(SBlockE
 
         //TODO not sure if i like it
         schematic.placeAt(level, player, player?.uuid ?: UUID(0L, 0L), pos.toJomlVector3d(), Quaterniond(),
-            PasteSchematicSettings(false, false, logger = SM.logger, nonfatalErrorsHandler = { numErrors, _, _ -> ELOG("zamn, $numErrors errors...")})
+            PasteSchematicSettings(false, false, logger = SM.logger,
+                statePlacedCallback = {pos, state ->
+                    val remaining = notConsumed[state.block.asItem()] ?: return@PasteSchematicSettings ELOG("This should be impossible, Schematic has pasted a block state that isn't in notConsumed list. If you see this then pls tell me how you caused this.")
+                    notConsumed[state.block.asItem()] = remaining - 1
+                    if (remaining == 1) {
+                        notConsumed.remove(state.block.asItem())
+                        return@PasteSchematicSettings
+                    } else if (remaining <= 0) {
+                        notConsumed.remove(state.block.asItem())
+                        ELOG("This should be impossible, Schematic has pasted more blocks than it should have. If you see this then pls tell me how you caused this.")
+                    }
+                },
+                nonfatalErrorsHandler = { numErrors, _, _ -> ELOG("zamn, $numErrors errors...")},
+            )
         ) {
-            ELOG("absolute cinema")
+            if (notConsumed.isEmpty()) return@placeAt
+
+            //TODO recompute containers cuz they could become invalid and void items
+            containers.forEach { container ->
+                for (i in 0 until container.containerSize) {
+                    if (notConsumed.isEmpty()) { return@placeAt }
+
+                    val stack = container.getItem(i)
+                    val (amount, key) = if (stack.isEmpty) {
+                        val key = notConsumed.keys.first()
+                        notConsumed[key]!! to key
+                    } else {
+                        val key = stack.item
+                        (notConsumed[key] ?: continue) to key
+                    }
+
+                    val saveAmount = min(amount, key.maxStackSize)
+                    val newStack = ItemStack(key, saveAmount)
+                    container.setItem(i, newStack)
+
+                    if (saveAmount == amount) { notConsumed.remove(key); continue }
+                    notConsumed[key] = amount - saveAmount
+                }
+            }
+            if (notConsumed.isEmpty()) return@placeAt
+
+            val spawnPos = Vector3d(blockPos) + 0.5 + Vector3d(0, 1.5, 0)
+
+            notConsumed.forEach { item, remaining ->
+                var remaining = remaining
+                while (remaining > 0) {
+                    val amount = min(remaining, item.maxStackSize)
+                    remaining -= amount
+                    level.addFreshEntity(ItemEntity(level, spawnPos.x, spawnPos.y, spawnPos.z, ItemStack(item, amount)))
+                }
+            }
         }
     }
 
