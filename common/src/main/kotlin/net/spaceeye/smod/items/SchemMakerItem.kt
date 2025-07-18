@@ -7,7 +7,9 @@ import net.minecraft.world.InteractionResult
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.context.UseOnContext
 import net.spaceeye.smod.SItems
+import net.spaceeye.smod.SM
 import net.spaceeye.valkyrien_ship_schematics.containers.CompoundTagSerializable
+import net.spaceeye.vmod.schematic.SchematicActionsQueue.CopySchematicSettings
 import net.spaceeye.vmod.schematic.VModShipSchematicV2
 import net.spaceeye.vmod.schematic.makeFrom
 import org.valkyrienskies.mod.common.getShipManagingPos
@@ -30,7 +32,10 @@ class SchemMakerItem: Item(Properties().tab(SItems.TAB).stacksTo(1)) {
         (useOnContext.player as? ServerPlayer)?.sendMessage(TextComponent("Selected valid ship"), UUID(0L, 0L))
 
         val newSchem = VModShipSchematicV2()
-        newSchem.makeFrom(level, useOnContext.player as? ServerPlayer, useOnContext.player?.uuid ?: UUID(0L, 0L), ship) {
+        newSchem.makeFrom(level, useOnContext.player as? ServerPlayer, useOnContext.player?.uuid ?: UUID(0L, 0L), ship,
+            CopySchematicSettings(
+                false, false, logger = SM.logger
+            )) {
             stack.orCreateTag.put("schematic", (newSchem.serialize() as CompoundTagSerializable).tag!!)
             (useOnContext.player as? ServerPlayer)?.sendMessage(TextComponent("Saved schematic to stick"), UUID(0L, 0L))
         }

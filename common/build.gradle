@@ -34,6 +34,8 @@ dependencies {
 
     compileOnly("gg.essential:elementa:${rootProject.elementaVersion}")
     modImplementation(include("gg.essential:universalcraft-1.18.1-fabric:${rootProject.ucVersion}"))
+
+    modCompileOnly("com.simibubi.create:create-fabric-${minecraft_version}:${create_fabric_version}")
 }
 
 //Renames .kotlin_module of common so that it's not overwrited during forge/fabric compilation

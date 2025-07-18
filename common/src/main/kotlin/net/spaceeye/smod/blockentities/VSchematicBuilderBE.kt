@@ -25,6 +25,7 @@ import net.spaceeye.smod.ELOG
 import net.spaceeye.smod.SBlockEntities
 import net.spaceeye.smod.SM
 import net.spaceeye.smod.utils.regC2S
+import net.spaceeye.smod.schemCompat.SMSchemCompatObj
 import net.spaceeye.valkyrien_ship_schematics.interfaces.v1.IShipSchematicDataV1
 import net.spaceeye.vmod.VMConfig
 import net.spaceeye.vmod.events.PersistentEvents
@@ -342,6 +343,7 @@ class VSchematicBuilderBE(pos: BlockPos, state: BlockState): BlockEntity(SBlockE
                     }
                 },
                 nonfatalErrorsHandler = { numErrors, _, _ -> ELOG("zamn, $numErrors errors...")},
+                externalVSchemSupportProvider = SMSchemCompatObj
             )
         ) {
             if (notConsumed.isEmpty()) return@placeAt
