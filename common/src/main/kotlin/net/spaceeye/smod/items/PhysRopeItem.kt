@@ -6,7 +6,7 @@ import net.minecraft.client.Minecraft
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.server.level.ServerLevel
-import net.spaceeye.smod.SItems
+import net.spaceeye.smod.SMItems
 import net.spaceeye.smod.vEntityExtensions.SModPhysRopeWrenchable
 import net.spaceeye.vmod.guiElements.DItem
 import net.spaceeye.vmod.guiElements.makeDropDown
@@ -17,7 +17,6 @@ import net.spaceeye.vmod.rendering.RenderingUtils
 import net.spaceeye.vmod.rendering.types.PhysRopeRenderer
 import net.spaceeye.vmod.toolgun.modes.util.PositionModes
 import net.spaceeye.vmod.translate.ANGLE_LIMIT
-import net.spaceeye.vmod.translate.CENTERED_IN_BLOCK
 import net.spaceeye.vmod.translate.CENTERED_ON_SIDE
 import net.spaceeye.vmod.translate.HITPOS_MODES
 import net.spaceeye.vmod.translate.NORMAL
@@ -35,7 +34,7 @@ import org.valkyrienskies.core.api.ships.properties.ShipId
 import java.awt.Color
 import kotlin.math.roundToInt
 
-class PhysRopeItem: TwoPointsItem(SItems.TAB, 64) {
+class PhysRopeItem: TwoPointsItem(SMItems.TAB, 64) {
     class Data(): TagAndByteAutoSerializable {
         @JsonIgnore private var i = 0
 

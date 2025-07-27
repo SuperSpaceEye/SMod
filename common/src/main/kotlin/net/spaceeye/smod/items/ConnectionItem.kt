@@ -6,7 +6,7 @@ import net.minecraft.client.Minecraft
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.server.level.ServerLevel
-import net.spaceeye.smod.SItems
+import net.spaceeye.smod.SMItems
 import net.spaceeye.smod.vEntityExtensions.SModRopeWrenchable
 import net.spaceeye.vmod.guiElements.DItem
 import net.spaceeye.vmod.guiElements.makeDropDown
@@ -38,7 +38,7 @@ import org.valkyrienskies.core.api.ships.ServerShip
 import org.valkyrienskies.core.api.ships.properties.ShipId
 import kotlin.math.roundToInt
 
-class ConnectionItem: TwoPointsItem(SItems.TAB, 64) {
+class ConnectionItem: TwoPointsItem(SMItems.TAB, 64) {
     class Data(): TagAndByteAutoSerializable {
         @JsonIgnore private var i = 0
 

@@ -6,7 +6,7 @@ import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.Item
 import net.minecraft.world.level.block.state.BlockBehaviour
 import net.minecraft.world.level.material.Material
-import net.spaceeye.smod.SItems.TAB
+import net.spaceeye.smod.SMItems.TAB
 import net.spaceeye.smod.blocks.VSchematicBuilder
 
 object SBlocks {

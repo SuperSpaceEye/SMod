@@ -1,12 +1,18 @@
 package net.spaceeye.smod.items
 
+import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.network.chat.TextComponent
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionResultHolder
+import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.context.UseOnContext
-import net.spaceeye.smod.SItems
+import net.minecraft.world.level.Level
+import net.spaceeye.smod.SMItems
 import net.spaceeye.smod.SM
 import net.spaceeye.valkyrien_ship_schematics.containers.CompoundTagSerializable
 import net.spaceeye.vmod.schematic.SchematicActionsQueue.CopySchematicSettings
@@ -15,7 +21,18 @@ import net.spaceeye.vmod.schematic.makeFrom
 import org.valkyrienskies.mod.common.getShipManagingPos
 import java.util.UUID
 
-class SchemMakerItem: Item(Properties().tab(SItems.TAB).stacksTo(1)) {
+class SchemMakerItem: Item(Properties().tab(SMItems.TAB).stacksTo(1)) {
+    override fun use(
+        level: Level,
+        player: Player,
+        interactionHand: InteractionHand
+    ): InteractionResultHolder<ItemStack?>? {
+        if (player.isShiftKeyDown && level is ClientLevel) {
+
+        }
+        return super.use(level, player, interactionHand)
+    }
+
     override fun useOn(useOnContext: UseOnContext): InteractionResult {
         val level = useOnContext.level as? ServerLevel ?: return super.useOn(useOnContext)
         val pos = useOnContext.clickedPos

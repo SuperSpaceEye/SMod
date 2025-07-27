@@ -28,6 +28,7 @@ import net.spaceeye.vmod.reflectable.constructor
 import net.spaceeye.vmod.rendering.RenderingData
 import net.spaceeye.vmod.rendering.types.special.PrecisePlacementAssistRenderer
 import net.spaceeye.vmod.toolgun.ClientToolGunState
+import net.spaceeye.vmod.toolgun.ToolgunKeybinds
 import net.spaceeye.vmod.toolgun.modes.util.PositionModes
 import net.spaceeye.vmod.toolgun.modes.util.getModePosition
 import net.spaceeye.vmod.toolgun.modes.util.serverRaycast2PointsFnActivationBase
@@ -80,7 +81,8 @@ fun CompoundTag.getMyVector3dNullable(prefix: String): Vector3d? {
     }
 }
 
-fun raycastResultFromTag(t: CompoundTag): RaycastFunctions.RaycastResult {
+fun raycastResultFromTag(t: CompoundTag): RaycastFunctions.RaycastResult? {
+    if (!t.contains("origin") || !t.contains("lookVec") || !t.contains("blockPosition") || !t.contains("shipId")) return null
     return RaycastFunctions.RaycastResult(
         Blocks.AIR.defaultBlockState(),
         t.getMyVector3d("origin"),
@@ -127,7 +129,8 @@ abstract class TwoPointsItem(tab: CreativeModeTab, stacksTo: Int): Item(Properti
     }
     abstract fun syncDataConstructor(): TagAndByteAutoSerializable
 
-    private val clientPos: Vector3d? get() = Minecraft.getInstance().player!!.mainHandItem.orCreateTag.get("firstPos")?.let { raycastResultFromTag(it as CompoundTag) }?.let { getModePosition(cPosMode, it, numPreciseSides) }
+//    private val clientPos: Vector3d? get() = Minecraft.getInstance().player?.mainHandItem?.orCreateTag?.get("firstPos")?.let { raycastResultFromTag(it as CompoundTag) }?.let { getModePosition(cPosMode, it, numPreciseSides) }
+    private val clientPos: Vector3d? get() = Vector3d()
     open val cGhostWidth: Double get() = 1.0/8.0
     open val cPosMode: PositionModes get() = PositionModes.PRECISE_PLACEMENT
 
@@ -263,7 +266,7 @@ abstract class TwoPointsItem(tab: CreativeModeTab, stacksTo: Int): Item(Properti
                 (keyCode, scanCode, action, modifiers), _ ->
                 if (action != GLFW.GLFW_PRESS) {return@on false}
                 val screen = Minecraft.getInstance().screen as? TwoPointsItemSettingsGUIWindow ?: return@on false
-                if (!ClientToolGunState.TOOLGUN_TOGGLE_HUD_KEY.matches(keyCode, scanCode) && keyCode != GLFW.GLFW_KEY_ESCAPE) { return@on false }
+                if (!ToolgunKeybinds.TOOLGUN_TOGGLE_HUD_KEY.matches(keyCode, scanCode) && keyCode != GLFW.GLFW_KEY_ESCAPE) { return@on false }
 
                 Minecraft.getInstance().setScreen(null)
 

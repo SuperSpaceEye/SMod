@@ -12,6 +12,7 @@ import io.netty.buffer.Unpooled
 import net.minecraft.client.Minecraft
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.BlockPos
+import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
@@ -26,6 +27,7 @@ import net.spaceeye.smod.SBlockEntities
 import net.spaceeye.smod.SM
 import net.spaceeye.smod.utils.regC2S
 import net.spaceeye.smod.schemCompat.SMSchemCompatObj
+import net.spaceeye.valkyrien_ship_schematics.containers.CompoundTagSerializable
 import net.spaceeye.valkyrien_ship_schematics.interfaces.v1.IShipSchematicDataV1
 import net.spaceeye.vmod.VMConfig
 import net.spaceeye.vmod.events.PersistentEvents
@@ -40,6 +42,7 @@ import net.spaceeye.vmod.schematic.SchematicActionsQueue.PasteSchematicSettings
 import net.spaceeye.vmod.schematic.VModShipSchematicV2
 import net.spaceeye.vmod.schematic.placeAt
 import net.spaceeye.vmod.toolgun.ClientToolGunState
+import net.spaceeye.vmod.toolgun.ToolgunKeybinds
 import net.spaceeye.vmod.toolgun.modes.state.PlayerSchematics
 import net.spaceeye.vmod.translate.LOAD
 import net.spaceeye.vmod.translate.get
@@ -270,7 +273,7 @@ class VSchematicBuilderMenu(val level: ClientLevel, val pos: BlockPos): WindowSc
                     (keyCode, scanCode, action, modifiers), _ ->
                 if (action != GLFW.GLFW_PRESS) {return@on false}
                 val screen = Minecraft.getInstance().screen as? VSchematicBuilderMenu ?: return@on false
-                if (!ClientToolGunState.TOOLGUN_TOGGLE_HUD_KEY.matches(keyCode, scanCode) && keyCode != GLFW.GLFW_KEY_ESCAPE) { return@on false }
+                if (!ToolgunKeybinds.TOOLGUN_TOGGLE_HUD_KEY.matches(keyCode, scanCode) && keyCode != GLFW.GLFW_KEY_ESCAPE) { return@on false }
 
                 Minecraft.getInstance().setScreen(null)
                 return@on true
@@ -280,9 +283,18 @@ class VSchematicBuilderMenu(val level: ClientLevel, val pos: BlockPos): WindowSc
 }
 
 class VSchematicBuilderBE(pos: BlockPos, state: BlockState): BlockEntity(SBlockEntities.VSCHEMATIC_BUILDER.get(), pos, state) {
-    //TODO do i want to save schematics? I probably do, but if i ser/deser tags directly it would be very easy to load shitload of schems to inflate world size.
-    // maybe have "schematic holder" that will hold all load schematics, and only have references in block entities?
     var schematic: VModShipSchematicV2? = null
+
+    override fun saveAdditional(tag: CompoundTag) {
+        val stag = (schematic?.serialize() as? CompoundTagSerializable)?.tag ?: return
+        tag.put("schematic", stag)
+    }
+
+    override fun load(tag: CompoundTag) {
+        schematic = null
+        val stag = tag.get("schematic") as? CompoundTag ?: return
+        schematic = VModShipSchematicV2().also { it.deserialize(CompoundTagSerializable(stag).serialize()) }
+    }
 
     fun buildSchematic(player: ServerPlayer?) {
         val schematic = schematic ?: return

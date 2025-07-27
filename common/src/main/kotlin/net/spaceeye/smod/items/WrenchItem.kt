@@ -7,7 +7,7 @@ import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.item.ItemEntity
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.context.UseOnContext
-import net.spaceeye.smod.SItems
+import net.spaceeye.smod.SMItems
 import net.spaceeye.smod.vEntityExtensions.SModWrenchable
 import net.spaceeye.vmod.utils.Vector3d
 import net.spaceeye.vmod.vEntityManaging.getVEntity
@@ -16,7 +16,7 @@ import net.spaceeye.vmod.vEntityManaging.removeVEntity
 import net.spaceeye.vmod.vEntityManaging.util.ExtendableVEntity
 import org.valkyrienskies.mod.common.util.toJOMLD
 
-class WrenchItem: Item(Properties().tab(SItems.TAB).stacksTo(1)) {
+class WrenchItem: Item(Properties().tab(SMItems.TAB).stacksTo(1)) {
     override fun useOn(context: UseOnContext): InteractionResult {
         val level = context.level
         if (level !is ServerLevel) { return super.useOn(context) }

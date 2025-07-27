@@ -1,0 +1,12 @@
+{
+  "smod.gui.wrench": "Wrench",
+
+  "smod.gui.text.wrench_hud_1": "LMB - wrench",
+  
+  "item.the_smod.survival_toolgun": "Survival Toolgun",
+  "item.the_smod.rope": "Rope",
+  "item.the_smod.phys_rope": "Physics Rope",
+  "item.the_smod.connection_item": "Connection",
+  
+  "itemGroup.the_smod.smod_tab": "SMod"
+}

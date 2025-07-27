@@ -6,7 +6,7 @@ import net.minecraft.client.Minecraft
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.server.level.ServerLevel
-import net.spaceeye.smod.SItems
+import net.spaceeye.smod.SMItems
 import net.spaceeye.smod.vEntityExtensions.SModRopeWrenchable
 import net.spaceeye.vmod.guiElements.CheckBox
 import net.spaceeye.vmod.guiElements.DItem
@@ -41,7 +41,7 @@ import org.valkyrienskies.core.api.ships.properties.ShipId
 import java.awt.Color
 import kotlin.math.roundToInt
 
-class RopeItem: TwoPointsItem(SItems.TAB, 64) {
+class RopeItem: TwoPointsItem(SMItems.TAB, 64) {
     class Data(): TagAndByteAutoSerializable {
         @JsonIgnore private var i = 0
 
@@ -55,7 +55,7 @@ class RopeItem: TwoPointsItem(SItems.TAB, 64) {
     override fun syncDataConstructor() = Data()
 
     override val cGhostWidth: Double get() = withSync<Data, Double>(Minecraft.getInstance().player!!.mainHandItem.orCreateTag) { width }
-    override val cPosMode: PositionModes get() = withSync<Data, PositionModes>(Minecraft.getInstance().player!!.mainHandItem.orCreateTag) { posMode }
+    override val cPosMode: PositionModes get() = withSync<Data, PositionModes>(Minecraft.getInstance().player?.mainHandItem?.orCreateTag ?: CompoundTag()) { posMode }
 
     override fun makeVEntity(data: ItemData, level: ServerLevel, shipId1: ShipId, shipId2: ShipId, ship1: ServerShip?, ship2: ServerShip?, sPos1: Vector3d, sPos2: Vector3d, rPos1: Vector3d, rPos2: Vector3d, sDir1: Vector3d, sDir2: Vector3d, sRot1: Quaterniond, sRot2: Quaterniond, length: Double, pr: RaycastFunctions.RaycastResult, rr: RaycastFunctions.RaycastResult): VEntity
     = with(data.getOrPutSyncData<Data>()) {
