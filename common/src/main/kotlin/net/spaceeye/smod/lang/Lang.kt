@@ -30,3 +30,5 @@ private fun a(default: String, key: String) = makeComponent(default, path +"tabs
 val WRENCH = t("Wrench")
 
 val WRENCH_HUD_1 = x("LMB - wrench", "wrench_hud_1")
+
+val NOT_ENOUGH_ITEMS = x("Need ==NUM_ITEMS== more \\\"==ITEM_NAME==\\\"!", "not_enough_items")

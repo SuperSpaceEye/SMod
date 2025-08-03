@@ -2,6 +2,7 @@
   "smod.gui.wrench": "Wrench",
 
   "smod.gui.text.wrench_hud_1": "LMB - wrench",
+  "smod.gui.text.not_enough_items": "Need ==NUM_ITEMS== more \"==ITEM_NAME==\"!",
   
   "item.the_smod.survival_toolgun": "Survival Toolgun",
   "item.the_smod.rope": "Rope",

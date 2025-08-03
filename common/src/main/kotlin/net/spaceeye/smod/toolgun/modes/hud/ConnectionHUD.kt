@@ -9,8 +9,7 @@ import net.spaceeye.vmod.translate.*
 interface ConnectionHUD: SimpleHUD {
     override fun makeSubText(makeText: (String) -> Unit) {
         this as ConnectionMode
-//        val paStage = getExtensionOfType<PlacementAssistExtension>().paStage
-        val paStage = FIRST_RAYCAST
+        val paStage = getExtensionOfType<PlacementAssistExtension>().paStage
         when {
             paStage == FIRST_RAYCAST && !primaryFirstRaycast && !paMiddleFirstRaycast -> makeText(COMMON_HUD_1.get())
             primaryFirstRaycast || paMiddleFirstRaycast -> makeText(COMMON_HUD_2.get())

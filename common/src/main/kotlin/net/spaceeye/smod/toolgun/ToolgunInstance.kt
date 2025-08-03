@@ -34,9 +34,11 @@ private var instance: ToolgunInstance? = null
 
             field!!.client.addWindow(MAIN) {ToolgunGUI(it, field!!.client)}
             field!!.client.addWindow(CLIENT_SETTINGS) {ClientSettingsGUI(it)}
-            field!!.client.addWindow(SETTINGS_PRESETS) {SettingPresets(it, field!!.client)}
 
+            field!!.instanceStorage.put("Presettable-dir-name", "SMod-Presets")
+            field!!.client.addWindow(SETTINGS_PRESETS) {SettingPresets(it, field!!)}
             ScreenWindow.addScreenAddition { PresetsAddition().also { it.instance = field!! } }
+
             ScreenWindow.addScreenAddition { InfoAddition()   .also { it.instance = field!! } }
         } }
 

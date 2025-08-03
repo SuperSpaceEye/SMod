@@ -3,6 +3,7 @@ package net.spaceeye.smod
 import net.spaceeye.smod.blockentities.VSchematicBuilderNetworking
 import net.spaceeye.smod.toolgun.SMToolgun
 import net.spaceeye.smod.toolgun.SModToolgunModes
+import net.spaceeye.smod.toolgun.modes.ut.SurvivalUtils
 import net.spaceeye.smod.vEntityExtensions.SModVEntityExtensions
 import net.spaceeye.smod.vEntityExtensions.SModWrenchableExtensions
 import org.apache.logging.log4j.LogManager
@@ -29,6 +30,7 @@ object SM {
 
         SModToolgunModes
         SMToolgun
+        SurvivalUtils
 
         VSchematicBuilderNetworking
     }
