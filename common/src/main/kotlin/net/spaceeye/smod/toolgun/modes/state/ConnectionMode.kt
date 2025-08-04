@@ -3,14 +3,15 @@ package net.spaceeye.smod.toolgun.modes.state
 import com.fasterxml.jackson.annotation.JsonIgnore
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.item.Item
 import net.spaceeye.smod.SM
 import net.spaceeye.smod.SMItems
 import net.spaceeye.smod.toolgun.SModToolgunModes
 import net.spaceeye.smod.toolgun.modes.gui.ConnectionGUI
 import net.spaceeye.smod.toolgun.modes.hud.ConnectionHUD
-import net.spaceeye.smod.toolgun.modes.ut.SurvivalUtils.costCalc
-import net.spaceeye.smod.toolgun.modes.ut.SurvivalUtils.survivalGateWithCallback
-import net.spaceeye.smod.vEntityExtensions.SModConnectionWrenchable
+import net.spaceeye.smod.toolgun.modes.util.SurvivalUtils.costCalc
+import net.spaceeye.smod.toolgun.modes.util.SurvivalUtils.survivalGateWithCallback
+import net.spaceeye.smod.vEntityExtensions.AnyWrenchable
 import net.spaceeye.vmod.compat.vsBackwardsCompat.scaling
 import net.spaceeye.vmod.vEntityManaging.extensions.RenderableExtension
 import net.spaceeye.vmod.vEntityManaging.extensions.Strippable
@@ -63,7 +64,7 @@ class ConnectionMode: ExtendableToolgunMode(), ConnectionGUI, ConnectionHUD {
         val distance = if (fixedDistance < 0) {(rPos2 - rPos1).dist().toFloat()} else {fixedDistance}
 
         val cost = costCalc(distance.toDouble())
-        if (!survivalGateWithCallback(player, SMItems.CONNECTION_ITEM.get(), cost)) { return@serverRaycast2PointsFnActivation resetState() }
+        if (!survivalGateWithCallback(player, item, cost)) { return@serverRaycast2PointsFnActivation resetState() }
 
         level.makeVEntity(ConnectionConstraint(
             sPos1, sPos2, //directions get scaled
@@ -78,8 +79,7 @@ class ConnectionMode: ExtendableToolgunMode(), ConnectionGUI, ConnectionHUD {
             sPos1, sPos2,
             color, width, fullbright, RenderingUtils.whiteTexture))
         ).addExtension(Strippable()
-        ).addExtension(SModConnectionWrenchable(cost)
-        ))
+        ).addExtension(AnyWrenchable(item, cost)))
 
         resetState()
     }
@@ -90,6 +90,7 @@ class ConnectionMode: ExtendableToolgunMode(), ConnectionGUI, ConnectionHUD {
     }
 
     companion object {
+        val item: Item inline get() = SMItems.CONNECTION_ITEM.get()
         val paNetworkingObj = PlacementAssistNetworking("connection_networking", SM.MOD_ID)
         init {
             SModToolgunModes.registerWrapper(ConnectionMode::class) {
@@ -114,9 +115,9 @@ class ConnectionMode: ExtendableToolgunMode(), ConnectionGUI, ConnectionHUD {
                                 Quaterniond(ship2?.transform?.shipToWorldRotation ?: Quaterniond()),
                                 shipId1, shipId2, it.maxForce, it.stiffness, it.damping, paDistanceFromBlock.toFloat(), it.connectionMode
                             ).addExtension(Strippable()
-                            ).addExtension(SModConnectionWrenchable(costCalc(paDistanceFromBlock)))
+                            ).addExtension(AnyWrenchable(item, costCalc(paDistanceFromBlock)))
                         },
-                        {level, player, part, pr, rr -> survivalGateWithCallback(player, SMItems.CONNECTION_ITEM.get(), costCalc(part.paDistanceFromBlock))}
+                        {level, player, part, pr, rr -> survivalGateWithCallback(player, item, costCalc(part.paDistanceFromBlock))}
                     )
                 }.addExtension { Presettable() }
             }

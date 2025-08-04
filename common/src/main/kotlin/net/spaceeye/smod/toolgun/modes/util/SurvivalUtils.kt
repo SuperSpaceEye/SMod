@@ -1,4 +1,4 @@
-package net.spaceeye.smod.toolgun.modes.ut
+package net.spaceeye.smod.toolgun.modes.util
 
 import net.minecraft.client.resources.language.I18n
 import net.minecraft.server.level.ServerPlayer
