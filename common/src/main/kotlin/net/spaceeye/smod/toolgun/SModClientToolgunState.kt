@@ -3,6 +3,7 @@ package net.spaceeye.smod.toolgun
 import net.minecraft.client.Minecraft
 import net.spaceeye.smod.SMItems
 import net.spaceeye.vmod.gui.ScreenWindow
+import net.spaceeye.vmod.gui.addScreenAddition
 import net.spaceeye.vmod.gui.additions.HUDAddition
 import net.spaceeye.vmod.toolgun.ClientToolGunState
 import net.spaceeye.vmod.toolgun.ToolgunInstance
@@ -17,7 +18,7 @@ class SModClientToolgunState(instance: ToolgunInstance): ClientToolGunState(inst
         initHudAddition = {
             val hudAddition = HUDAddition().also { it.instance = instance }
             hudAddition.defaultHUD = DefaultHUD("SMod")
-            ScreenWindow.addScreenAddition { hudAddition }
+            addScreenAddition { hudAddition }
             renderHud = FakeKProperty({hudAddition.renderHUD}) {hudAddition.renderHUD = it}
         }
     }

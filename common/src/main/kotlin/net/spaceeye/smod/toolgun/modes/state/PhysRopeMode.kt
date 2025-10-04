@@ -86,7 +86,7 @@ class PhysRopeMode: ExtendableToolgunMode(), PhysRopeGUI, PhysRopeHUD {
             stiffness, maxForce,
             dist, segments, totalMass / segments, radius, Math.toRadians(angleLimit)
         )   .also { it.addExtension(PhysRopeRenderable(PhysRopeRenderer(shipId1, shipId2, sPos1, sPos2, up1, up2, right1, right2, Color(255, 255, 255), sides, fullbright,
-            listOf(), RenderingUtils.ropeTexture))) }
+            longArrayOf(), RenderingUtils.ropeTexture))) }
             .addExtension(Strippable())
             .addExtension(AnyWrenchable(item, cost))
             .also {level.makeVEntity(it) }

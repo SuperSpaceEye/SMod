@@ -1,6 +1,6 @@
 package net.spaceeye.smod.vEntityExtensions
 
-import net.minecraft.core.Registry
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerLevel
@@ -18,7 +18,7 @@ class AnyWrenchable(): SModWrenchable {
     constructor(item: Item, numItems: Int): this(item.builtInRegistryHolder().key().location(), numItems)
     constructor(location: ResourceLocation, numItems: Int): this() {this.itemLocation = location; this.numItems = numItems}
 
-    override fun getItemStack() = ItemStack(Registry.ITEM.get(itemLocation), numItems)
+    override fun getItemStack() = ItemStack(BuiltInRegistries.ITEM.get(itemLocation), numItems)
     override fun onAfterCopyVEntity(level: ServerLevel, mapped: Map<ShipId, ShipId>, centerPositions: Map<ShipId, Pair<Vector3d, Vector3d>>, new: ExtendableVEntity) { new.addExtension(AnyWrenchable(itemLocation, numItems)) }
 
     override fun onSerialize(): CompoundTag? {

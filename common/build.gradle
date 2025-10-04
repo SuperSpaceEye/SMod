@@ -7,7 +7,7 @@ repositories {
 }
 
 dependencies {
-    modCompileOnly(files("jars/VMod-Fabric-1.18.2-1.6.1.jar"))
+    modCompileOnly(files("jars/VMod-Fabric-1.20.1-1.7.1.jar"))
     modImplementation("net.spaceeye:valkyrien-ship-schematics-$project.minecraft_version-$project.name:$project.vss_version") {transitive false}
 
     api 'org.joml:joml-primitives:1.10.0'
@@ -18,22 +18,17 @@ dependencies {
     // Remove the next line if you don't want to depend on the API
     modApi "dev.architectury:architectury:${rootProject.architectury_version}"
 
-    modApi("org.valkyrienskies:valkyrienskies-118-common:${rootProject.vs2_version}")
-    implementation("org.valkyrienskies.core:api:${rootProject.vscore_version}") {
-        exclude group: 'org.joml', module: ''
-    }
-    implementation("org.valkyrienskies.core:impl:${rootProject.vscore_version}") {
-        exclude group: 'org.joml', module: ''
-    }
-    implementation("org.valkyrienskies.core:api-game:${rootProject.vscore_version}") {
-        exclude group: 'org.joml', module: ''
-    }
+    modApi("org.valkyrienskies:valkyrienskies-120-common:${project.vs2_version}")
+    compileOnly("org.valkyrienskies.core:api:${project.vs_core_version}")
+    compileOnly("org.valkyrienskies.core:api-game:${project.vs_core_version}")
+    compileOnly("org.valkyrienskies.core:util:${project.vs_core_version}")
+    compileOnly("org.valkyrienskies.core:impl:${project.vs_core_version}")
 
     api "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.21"
     api "org.jetbrains.kotlin:kotlin-reflect:1.7.21"
 
     compileOnly("gg.essential:elementa:${rootProject.elementaVersion}")
-    modImplementation(include("gg.essential:universalcraft-1.18.1-fabric:${rootProject.ucVersion}"))
+    modImplementation(include("gg.essential:universalcraft-1.20.1-fabric:${rootProject.ucVersion}"))
 
     modCompileOnly("com.simibubi.create:create-fabric-${minecraft_version}:${create_fabric_version}")
 }

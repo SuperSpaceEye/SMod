@@ -1,7 +1,7 @@
 package net.spaceeye.smod.items
 
 import net.minecraft.client.multiplayer.ClientLevel
-import net.minecraft.network.chat.TextComponent
+import net.minecraft.network.chat.Component
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.InteractionHand
@@ -21,7 +21,7 @@ import net.spaceeye.vmod.schematic.makeFrom
 import org.valkyrienskies.mod.common.getShipManagingPos
 import java.util.UUID
 
-class SchemMakerItem: Item(Properties().tab(SMItems.TAB).stacksTo(1)) {
+class SchemMakerItem: Item(Properties().`arch$tab`(SMItems.TAB).stacksTo(1)) {
     override fun use(
         level: Level,
         player: Player,
@@ -42,11 +42,11 @@ class SchemMakerItem: Item(Properties().tab(SMItems.TAB).stacksTo(1)) {
 
         if (ship == null) {
             stack.tag = null
-            (useOnContext.player as? ServerPlayer)?.sendMessage(TextComponent("Reset selection"), UUID(0L, 0L))
+            (useOnContext.player as? ServerPlayer)?.sendSystemMessage(Component.literal("Reset selection"))
             return InteractionResult.PASS
         }
 
-        (useOnContext.player as? ServerPlayer)?.sendMessage(TextComponent("Selected valid ship"), UUID(0L, 0L))
+        (useOnContext.player as? ServerPlayer)?.sendSystemMessage(Component.literal("Selected valid ship"))
 
         val newSchem = VModShipSchematicV2()
         newSchem.makeFrom(level, useOnContext.player as? ServerPlayer, useOnContext.player?.uuid ?: UUID(0L, 0L), ship,
@@ -54,7 +54,7 @@ class SchemMakerItem: Item(Properties().tab(SMItems.TAB).stacksTo(1)) {
                 false, false, logger = SM.logger
             )) {
             stack.orCreateTag.put("schematic", (newSchem.serialize() as CompoundTagSerializable).tag!!)
-            (useOnContext.player as? ServerPlayer)?.sendMessage(TextComponent("Saved schematic to stick"), UUID(0L, 0L))
+            (useOnContext.player as? ServerPlayer)?.sendSystemMessage(Component.literal("Saved schematic to stick"))
         }
 
         return InteractionResult.PASS

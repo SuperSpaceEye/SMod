@@ -4,7 +4,7 @@ import net.minecraft.client.Minecraft
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.BlockPos
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.chat.TextComponent
+import net.minecraft.network.chat.Component
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
@@ -45,7 +45,7 @@ class VSchematicBuilder(properties: Properties): BaseEntityBlock(properties) {
             be.schematic = try {
                 VModShipSchematicV2().let { if (it.deserialize(CompoundTagSerializable(tag).serialize())) it else null }
             } catch (_: Exception) {null} ?: return InteractionResult.PASS
-            player.sendMessage(TextComponent("Loaded schematic to builder"), UUID(0L, 0L))
+            player.sendSystemMessage(Component.literal("Loaded schematic to builder"))
             return InteractionResult.CONSUME
         }
 

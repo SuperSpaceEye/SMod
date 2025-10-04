@@ -16,7 +16,7 @@ import net.spaceeye.vmod.vEntityManaging.removeVEntity
 import net.spaceeye.vmod.vEntityManaging.util.ExtendableVEntity
 import org.valkyrienskies.mod.common.util.toJOMLD
 
-class WrenchItem: Item(Properties().tab(SMItems.TAB).stacksTo(1)) {
+class WrenchItem: Item(Properties().`arch$tab`(SMItems.TAB).stacksTo(1)) {
     override fun useOn(context: UseOnContext): InteractionResult {
         val level = context.level
         if (level !is ServerLevel) { return super.useOn(context) }

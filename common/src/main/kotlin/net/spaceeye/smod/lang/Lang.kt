@@ -1,6 +1,6 @@
 package net.spaceeye.smod.lang
 
-import net.minecraft.network.chat.TranslatableComponent
+import net.minecraft.network.chat.Component
 
 val registeredComponents = mutableListOf<MyTranslatableComponent>()
 
@@ -9,7 +9,7 @@ data class MyTranslatableComponent(val enTranslation: String, val key: String) {
         registeredComponents.add(this)
     }
 
-    fun asMC() = TranslatableComponent(key)
+    fun asMC() = Component.translatable(key)
 }
 fun makeComponent(default: String, key: String) = MyTranslatableComponent(default, key).asMC()
 

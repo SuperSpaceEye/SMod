@@ -5,6 +5,7 @@ import dev.architectury.utils.EnvExecutor
 import net.spaceeye.smod.SM
 import net.spaceeye.vmod.MOD_ID
 import net.spaceeye.vmod.gui.ScreenWindow
+import net.spaceeye.vmod.gui.addScreenAddition
 import net.spaceeye.vmod.gui.additions.HUDAddition
 import net.spaceeye.vmod.gui.additions.InfoAddition
 import net.spaceeye.vmod.gui.additions.PresetsAddition
@@ -37,9 +38,9 @@ private var instance: ToolgunInstance? = null
 
             field!!.instanceStorage.put("Presettable-dir-name", "SMod-Presets")
             field!!.client.addWindow(SETTINGS_PRESETS) {SettingPresets(it, field!!)}
-            ScreenWindow.addScreenAddition { PresetsAddition().also { it.instance = field!! } }
+            addScreenAddition { PresetsAddition().also { it.instance = field!! } }
 
-            ScreenWindow.addScreenAddition { InfoAddition()   .also { it.instance = field!! } }
+            addScreenAddition { InfoAddition()   .also { it.instance = field!! } }
         } }
 
         return field

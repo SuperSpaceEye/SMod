@@ -29,12 +29,14 @@ repositories {
 }
 
 dependencies {
-    modRuntimeOnly(files("jars/VMod-Fabric-1.18.2-1.6.1.jar"))
+    modRuntimeOnly(files("jars/VMod-Fabric-1.20.1-1.7.1.jar"))
 
     runtimeOnly(("gg.essential:elementa:${rootProject.elementaVersion}")) {transitive false}
-    modRuntimeOnly("gg.essential:universalcraft-1.18.1-fabric:${rootProject.ucVersion}") {transitive false}
+    modRuntimeOnly("gg.essential:universalcraft-1.20.1-fabric:${rootProject.ucVersion}") {transitive false}
     modRuntimeOnly("net.spaceeye:valkyrien-ship-schematics-$project.minecraft_version-$project.name:$project.vss_version") {transitive false}
     runtimeOnly("org.jgrapht:jgrapht-core:1.5.2") {transitive false}
+
+    implementation(annotationProcessor("com.github.bawnorton.mixinsquared:mixinsquared-fabric:0.3.5-beta.2"))
 
     api 'org.joml:joml-primitives:1.10.0'
     api 'org.joml:joml:1.10.4'
@@ -47,25 +49,20 @@ dependencies {
     common(project(path: ":common", configuration: "namedElements")) { transitive false }
     shadowCommon(project(path: ":common", configuration: "transformProductionFabric")) { transitive false }
 
-    modApi(files("jars/valkyrienskies-118-2.1.1-beta.5.jar"))
-    implementation("org.valkyrienskies.core:api:${rootProject.vscore_version}") {
-        exclude group: 'org.joml', module: ''
-    }
-    implementation("org.valkyrienskies.core:util:${rootProject.vscore_version}") {
-        exclude group: 'org.joml', module: ''
-    }
-    implementation("org.valkyrienskies.core:api-game:${rootProject.vscore_version}") {
-        exclude group: 'org.joml', module: ''
-    }
+    modApi("org.valkyrienskies:valkyrienskies-120-fabric:${project.vs2_version}") { transitive = false }
+    compileOnly("org.valkyrienskies.core:api:${project.vs_core_version}") { transitive = false }
+    compileOnly("org.valkyrienskies.core:api-game:${project.vs_core_version}") { transitive = false }
+    compileOnly("org.valkyrienskies.core:util:${project.vs_core_version}") { transitive = false }
+    compileOnly("org.valkyrienskies.core:impl:${project.vs_core_version}") { transitive = false }
 
     // Kotlin
-    modImplementation("net.fabricmc:fabric-language-kotlin:1.10.10+kotlin.1.9.10")
-    api "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.21"
-    api "org.jetbrains.kotlin:kotlin-reflect:1.7.21"
+    modImplementation("net.fabricmc:fabric-language-kotlin:1.10.10+kotlin.1.9.10") { transitive = false }
+    api "org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.1.0"
+    api "org.jetbrains.kotlin:kotlin-reflect:2.1.0"
 
     implementation 'com.electronwill.night-config:core:3.6.3'
     implementation 'com.electronwill.night-config:toml:3.6.3'
-    modCompileOnlyApi "curse.maven:forge-config-api-port-fabric-547434:3943250"
+    modApi("curse.maven:forge-config-api-port-fabric-547434:4583000") { transitive = false }
 }
 
 processResources {

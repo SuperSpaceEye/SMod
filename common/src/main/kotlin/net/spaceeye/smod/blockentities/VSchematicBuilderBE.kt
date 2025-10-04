@@ -31,6 +31,7 @@ import net.spaceeye.valkyrien_ship_schematics.containers.CompoundTagSerializable
 import net.spaceeye.valkyrien_ship_schematics.interfaces.v1.IShipSchematicDataV1
 import net.spaceeye.vmod.VMConfig
 import net.spaceeye.vmod.events.PersistentEvents
+import net.spaceeye.vmod.events.SessionEvents
 import net.spaceeye.vmod.guiElements.Button
 import net.spaceeye.vmod.guiElements.makeText
 import net.spaceeye.vmod.networking.DataStream
@@ -41,7 +42,6 @@ import net.spaceeye.vmod.reflectable.constructor
 import net.spaceeye.vmod.schematic.SchematicActionsQueue.PasteSchematicSettings
 import net.spaceeye.vmod.schematic.VModShipSchematicV2
 import net.spaceeye.vmod.schematic.placeAt
-import net.spaceeye.vmod.toolgun.ClientToolGunState
 import net.spaceeye.vmod.toolgun.ToolgunKeybinds
 import net.spaceeye.vmod.toolgun.modes.state.PlayerSchematics
 import net.spaceeye.vmod.translate.LOAD
@@ -50,7 +50,6 @@ import net.spaceeye.vmod.utils.Either
 import net.spaceeye.vmod.utils.Tuple
 import net.spaceeye.vmod.utils.Tuple3
 import net.spaceeye.vmod.utils.Vector3d
-import net.spaceeye.vmod.utils.onServerTick
 import org.joml.Quaterniond
 import org.lwjgl.glfw.GLFW
 import org.valkyrienskies.mod.common.util.toJOML
@@ -64,6 +63,13 @@ import kotlin.collections.component2
 import kotlin.math.min
 
 const val PLAYER_REACH = 7.0
+
+private fun onServerTick(fn: () -> Unit) {
+    SessionEvents.serverOnTick.on { _, unsub ->
+        fn.invoke()
+        unsub.invoke()
+    }
+}
 
 object VSchematicBuilderNetworking {
     var getSchemStream = object : DataStream<SendSchemRequest, SchemHolder>(
@@ -82,7 +88,7 @@ object VSchematicBuilderNetworking {
 
         override fun transmitterRequestProcessor(req: SendSchemRequest, ctx: NetworkManager.PacketContext): Either<SchemHolder, RequestFailurePkt>? {
             val player = ctx.player as ServerPlayer
-            val level = player.level as ServerLevel
+            val level = player.serverLevel()
             if (!player.position().closerThan(req.pos.toJOMLD().add(0.5, 0.5, 0.5).toMinecraft(), PLAYER_REACH)) {
                 return Either.Right(RequestFailurePkt())
             }
@@ -120,7 +126,7 @@ object VSchematicBuilderNetworking {
 
         override fun receiverDataTransmitted(uuid: UUID, data: SchemHolder, ctx: NetworkManager.PacketContext) = onServerTick {
             val player = ctx.player as ServerPlayer
-            val level = player.level as ServerLevel
+            val level = player.serverLevel()
             if (!ctx.player.position().closerThan(data.pos.toJOMLD().add(0.5, 0.5, 0.5).toMinecraft(), PLAYER_REACH)) return@onServerTick
 
             (level.getBlockEntity(data.pos) as? VSchematicBuilderBE)?.schematic = data.data?.let { buf -> VModShipSchematicV2().also { it.deserialize(buf) } }
@@ -135,7 +141,7 @@ object VSchematicBuilderNetworking {
         {pkt, player -> player.position().toJOML().distance(pkt.pos.toJOMLD()) <= PLAYER_REACH}) {
         pkt, player ->
         onServerTick {
-            val level = player.level as ServerLevel
+            val level = player.serverLevel()
             (level.getBlockEntity(pkt.pos) as? VSchematicBuilderBE)?.buildSchematic(player)
         }
     }
@@ -403,7 +409,9 @@ class VSchematicBuilderBE(pos: BlockPos, state: BlockState): BlockEntity(SBlockE
             val palette = schematic.blockPalette
             schematic.blockData.forEach { (shipId, data) ->
                 data.forEach { x, y, z, item ->
-                    val state = palette.fromId(item.paletteId)?.block?.asItem() ?: return@forEach
+                    val block = palette.fromId(item.paletteId)?.block ?: return@forEach
+                    if (block.defaultBlockState().isAir) {return@forEach}
+                    val state = block.asItem() ?: return@forEach
 
                     blockMap[state] = blockMap.getOrDefault(state, 0) + 1
                 }

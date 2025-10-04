@@ -29,6 +29,7 @@ subprojects {
             name = "ParchmentMC"
             url = "https://maven.parchmentmc.org"
         }
+        maven { url = "https://maven.bawnorton.com/releases" } //mixin squared
     }
 
     dependencies {
