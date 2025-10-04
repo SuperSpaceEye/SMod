@@ -25,6 +25,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.spaceeye.smod.ELOG
 import net.spaceeye.smod.SBlockEntities
 import net.spaceeye.smod.SM
+import net.spaceeye.smod.blocks.VSchematicBuilderFrame
 import net.spaceeye.smod.utils.regC2S
 import net.spaceeye.smod.schemCompat.SMSchemCompatObj
 import net.spaceeye.valkyrien_ship_schematics.containers.CompoundTagSerializable
@@ -46,11 +47,14 @@ import net.spaceeye.vmod.toolgun.ToolgunKeybinds
 import net.spaceeye.vmod.toolgun.modes.state.PlayerSchematics
 import net.spaceeye.vmod.translate.LOAD
 import net.spaceeye.vmod.translate.get
+import net.spaceeye.vmod.translate.makeFake
 import net.spaceeye.vmod.utils.Either
+import net.spaceeye.vmod.utils.JVector3d
 import net.spaceeye.vmod.utils.Tuple
 import net.spaceeye.vmod.utils.Tuple3
 import net.spaceeye.vmod.utils.Vector3d
 import org.joml.Quaterniond
+import org.joml.Vector3i
 import org.lwjgl.glfw.GLFW
 import org.valkyrienskies.mod.common.util.toJOML
 import org.valkyrienskies.mod.common.util.toJOMLD
@@ -60,6 +64,7 @@ import java.util.Locale
 import java.util.UUID
 import kotlin.collections.component1
 import kotlin.collections.component2
+import kotlin.math.abs
 import kotlin.math.min
 
 const val PLAYER_REACH = 7.0
@@ -120,8 +125,8 @@ object VSchematicBuilderNetworking {
 
         override fun transmitterRequestProcessor(req: SendSchemRequest, ctx: NetworkManager.PacketContext): Either<SchemHolder, RequestFailurePkt>? {
             val be = Minecraft.getInstance().level?.getBlockEntity(req.pos) as? VSchematicBuilderBE
-            val res = be?.schematic?.let { SchemHolder(it.serialize().serialize(), req.pos) }
-            return if (res != null) { Either.Left(res) } else { Either.Right(RequestFailurePkt()) }
+            val res = SchemHolder(be?.schematic?.serialize()?.serialize(), req.pos)
+            return Either.Left(res)
         }
 
         override fun receiverDataTransmitted(uuid: UUID, data: SchemHolder, ctx: NetworkManager.PacketContext) = onServerTick {
@@ -204,6 +209,16 @@ class VSchematicBuilderMenu(val level: ClientLevel, val pos: BlockPos): WindowSc
 
         width  = 100.percent - 4.pixels
         height = 100.percent - 4.pixels
+    } childOf screen
+
+    val returnButton: Button = Button(Color.GRAY.brighter(), "Return") {
+        itemsScroll.clearChildren()
+        be!!.schematic = null
+        makeGUI(null)
+        VSchematicBuilderNetworking.c2sBeginLoadSchematic.sendToServer(VSchematicBuilderNetworking.SendSchemRequest(pos))
+    } constrain {
+        x = (2f).pixels(true)
+        y = (2f).pixels()
     } childOf screen
 
     init {
@@ -302,13 +317,90 @@ class VSchematicBuilderBE(pos: BlockPos, state: BlockState): BlockEntity(SBlockE
         schematic = VModShipSchematicV2().also { it.deserialize(CompoundTagSerializable(stag).serialize()) }
     }
 
-    fun buildSchematic(player: ServerPlayer?) {
-        val schematic = schematic ?: return
+    private fun findFrame(axis: Vector3i, getContainers: Boolean = false): Pair<Vector3i, List<Container>> {
         val level = level as ServerLevel
 
-        val containers = BlockPos.betweenClosed(blockPos.offset(-1, -1, -1), blockPos.offset(1, 1, 1))
-            .mapNotNull { level.getBlockEntity(it) as? Container }
-        if (containers.isEmpty()) {return}
+        var pos = BlockPos.MutableBlockPos(blockPos.x, blockPos.y, blockPos.z)
+        var next = BlockPos.MutableBlockPos(pos.x, pos.y, pos.z)
+
+        val containers = mutableListOf<Container>()
+        while (true) {
+            next = next.setWithOffset(next, axis.x, axis.y, axis.z)
+            if (level.getBlockState(next).block !is VSchematicBuilderFrame) break
+            pos.set(next)
+            if (!getContainers) continue
+
+            val sides = axis.absolute(Vector3i()).sub(1, 1, 1)
+            if (sides.x == -1) {
+                level.getBlockEntity(pos.offset( 1,  0,  0))?.also { if (it is Container) containers.add(it) }
+                level.getBlockEntity(pos.offset(-1,  0,  0))?.also { if (it is Container) containers.add(it) }
+            }
+            if (sides.y == -1) {
+                level.getBlockEntity(pos.offset( 0,  1,  0))?.also { if (it is Container) containers.add(it) }
+                level.getBlockEntity(pos.offset( 0, -1,  0))?.also { if (it is Container) containers.add(it) }
+            }
+            if (sides.z == -1) {
+                level.getBlockEntity(pos.offset( 0,  0,  1))?.also { if (it is Container) containers.add(it) }
+                level.getBlockEntity(pos.offset( 0,  0, -1))?.also { if (it is Container) containers.add(it) }
+            }
+        }
+
+        val offset = Vector3i(pos.x - blockPos.x, pos.y - blockPos.y, pos.z - blockPos.z)
+        return Pair(offset, containers)
+    }
+
+    private fun getLimits(): Pair<Vector3i, List<Container>> {
+        var x = 0
+        var y = 0
+        var z = 0
+
+        var potential = listOf(
+            Vector3i( 0,  1,  0),
+            Vector3i( 0, -1,  0),
+            Vector3i( 1,  0,  0),
+            Vector3i(-1,  0,  0),
+            Vector3i( 0,  0,  1),
+            Vector3i( 0,  0, -1),
+        ).map { findFrame(it) }
+
+        val selected = listOf(
+            if (potential[0].first.lengthSquared() >= potential[1].first.lengthSquared()) {potential[0]} else {potential[1]},
+            if (potential[2].first.lengthSquared() >= potential[3].first.lengthSquared()) {potential[2]} else {potential[3]},
+            if (potential[4].first.lengthSquared() >= potential[5].first.lengthSquared()) {potential[4]} else {potential[5]}
+        )
+
+        y = selected[0].first.y
+        x = selected[1].first.x
+        z = selected[2].first.z
+
+        if (x == 0 || y == 0 || z == 0) { return Pair(Vector3i(x, y, z), listOf()) }
+
+        val containers = selected.map { findFrame(it.first.let { it.div(abs(it.x + it.y + it.z)) }, true).second }.flatten()
+
+        return Pair(Vector3i(x, y, z), containers)
+    }
+
+    fun buildSchematic(player: ServerPlayer?) {
+        val schematic = schematic ?: return run { player?.sendSystemMessage(makeFake("Schematic is null, how?")) }
+        val level = level as ServerLevel
+
+        val schemSize = (schematic.info?.maxObjectPos ?: return run { player?.sendSystemMessage(makeFake("Schematic is incomplete, how?")) }).mul(2.0, JVector3d())
+        //TODO get containers separately
+        val (maxSize, subContainers) = getLimits()
+        val containers = listOfNotNull(
+            level.getBlockEntity(blockPos.offset( 0,  1,  0)) as? Container,
+            level.getBlockEntity(blockPos.offset( 0, -1,  0)) as? Container,
+            level.getBlockEntity(blockPos.offset( 1,  0,  0)) as? Container,
+            level.getBlockEntity(blockPos.offset(-1,  0,  0)) as? Container,
+            level.getBlockEntity(blockPos.offset( 0,  0,  1)) as? Container,
+            level.getBlockEntity(blockPos.offset( 0,  0, -1)) as? Container
+        ).toMutableList().also { it.addAll(subContainers) }
+
+        if (containers.isEmpty()) {return run { player?.sendSystemMessage(makeFake("No containers to get blocks from for schematic.")) }}
+        if (maxSize.x == 0 || maxSize.y == 0 || maxSize.z == 0) {return run { player?.sendSystemMessage(makeFake("Frame size ${maxSize.absolute()} is too small for schematic size $schemSize")) }}
+        if (schemSize.x > abs(maxSize.x) || schemSize.y > abs(maxSize.y) || schemSize.z > abs(maxSize.z)) {return run { player?.sendSystemMessage(makeFake("Frame size ${maxSize.absolute()} is too small for schematic size $schemSize")) }}
+
+        val toPos = Vector3d(blockPos) + Vector3d(maxSize).sign() + Vector3d(maxSize) / 2
 
         val required = schematicToRequirementsMap(schematic).toMutableMap()
         val notConsumed = required.toMutableMap()
@@ -335,7 +427,7 @@ class VSchematicBuilderBE(pos: BlockPos, state: BlockState): BlockEntity(SBlockE
             }
         }
 
-        if (required.isNotEmpty()) {return}
+        if (required.isNotEmpty()) {return run { player?.sendSystemMessage(makeFake("Not enough materials in containers to create schematic")) }}
 
         cache.forEach { (container, position, amount) ->
             when {
@@ -344,10 +436,8 @@ class VSchematicBuilderBE(pos: BlockPos, state: BlockState): BlockEntity(SBlockE
             }
         }
 
-        val pos = Vector3d(blockPos) + 0.5 + Vector3d(schematic.info!!.maxObjectPos) * Vector3d(0, 1, 0) + Vector3d(0, 3, 0)
-
         //TODO not sure if i like it
-        schematic.placeAt(level, player, player?.uuid ?: UUID(0L, 0L), pos.toJomlVector3d(), Quaterniond(),
+        schematic.placeAt(level, player, player?.uuid ?: UUID(0L, 0L), toPos.toJomlVector3d(), Quaterniond(),
             PasteSchematicSettings(false, false, logger = SM.logger,
                 statePlacedCallback = {pos, state ->
                     val remaining = notConsumed[state.block.asItem()] ?: return@PasteSchematicSettings ELOG("This should be impossible, Schematic has pasted a block state that isn't in notConsumed list. If you see this then pls tell me how you caused this.")

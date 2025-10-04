@@ -7,11 +7,13 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.level.block.state.BlockBehaviour
 import net.spaceeye.smod.SMItems.TAB
 import net.spaceeye.smod.blocks.VSchematicBuilder
+import net.spaceeye.smod.blocks.VSchematicBuilderFrame
 
 object SBlocks {
     private val BLOCKS = DeferredRegister.create(SM.MOD_ID, Registries.BLOCK)
 
     var VSCHEMATIC_BUILDER = BLOCKS.register("vschematic_builder") { VSchematicBuilder(BlockBehaviour.Properties.of().strength(2.0f)) }
+    var VSCHEMATIC_BUILDER_FRAME = BLOCKS.register("vschematic_builder_frame") { VSchematicBuilderFrame(BlockBehaviour.Properties.of().strength(2f)) }
 
     fun register() {BLOCKS.register()}
     fun registerItems(items: DeferredRegister<Item?>) {

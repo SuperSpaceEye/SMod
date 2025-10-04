@@ -3,18 +3,14 @@ package net.spaceeye.smod
 import dev.architectury.registry.CreativeTabRegistry
 import dev.architectury.registry.registries.DeferredRegister
 import dev.architectury.registry.registries.RegistrySupplier
-import net.minecraft.core.Registry
 import net.minecraft.core.registries.Registries
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.item.CreativeModeTab
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.spaceeye.smod.items.SchemMakerItem
 import net.spaceeye.smod.items.WrenchItem
 import net.spaceeye.smod.toolgun.ToolgunItem
-import net.spaceeye.vmod.VM
-import net.spaceeye.vmod.VMItems
 
 object SMItems {
     val ITEMS = DeferredRegister.create(SM.MOD_ID, Registries.ITEM)
@@ -42,5 +38,6 @@ object SMItems {
     fun register() {
         SBlocks.registerItems(ITEMS)
         ITEMS.register()
+        TABS.register()
     }
 }

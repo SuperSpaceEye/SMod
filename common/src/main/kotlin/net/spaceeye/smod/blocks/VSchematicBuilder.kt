@@ -46,10 +46,9 @@ class VSchematicBuilder(properties: Properties): BaseEntityBlock(properties) {
                 VModShipSchematicV2().let { if (it.deserialize(CompoundTagSerializable(tag).serialize())) it else null }
             } catch (_: Exception) {null} ?: return InteractionResult.PASS
             player.sendSystemMessage(Component.literal("Loaded schematic to builder"))
-            return InteractionResult.CONSUME
         }
 
-        return InteractionResult.PASS
+        return InteractionResult.SUCCESS
     }
 
     override fun neighborChanged(
