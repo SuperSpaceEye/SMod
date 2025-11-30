@@ -1,0 +1,20 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        " # ",
+        "/  ",
+        "   "
+    ],
+    "key": {
+        "#": {
+            "item": "the_smod:schematic_builder"
+        },
+        "/": {
+            "item": "minecraft:stick"
+        }
+    },
+    "result": {
+        "item": "the_smod:schematic_maker",
+        "count": 1
+    }
+}

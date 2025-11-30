@@ -29,7 +29,7 @@ repositories {
 }
 
 dependencies {
-    modRuntimeOnly(files("jars/VMod-Fabric-1.20.1-1.7.1.jar"))
+    modRuntimeOnly(files("jars/VMod-Fabric-1.20.1-1.8.0.jar"))
 
     runtimeOnly(("gg.essential:elementa:${rootProject.elementaVersion}")) {transitive false}
     modRuntimeOnly("gg.essential:universalcraft-1.20.1-fabric:${rootProject.ucVersion}") {transitive false}

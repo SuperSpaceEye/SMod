@@ -7,7 +7,7 @@ repositories {
 }
 
 dependencies {
-    modCompileOnly(files("jars/VMod-Fabric-1.20.1-1.7.1.jar"))
+    modCompileOnly(files("jars/VMod-Fabric-1.20.1-1.8.0.jar"))
     modImplementation("net.spaceeye:valkyrien-ship-schematics-$project.minecraft_version-$project.name:$project.vss_version") {transitive false}
 
     api 'org.joml:joml-primitives:1.10.0'

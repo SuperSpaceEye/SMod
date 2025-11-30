@@ -8,6 +8,9 @@
   "item.the_smod.rope": "Rope",
   "item.the_smod.phys_rope": "Physics Rope",
   "item.the_smod.connection_item": "Connection",
-  
+  "item.the_smod.schematic_maker": "Schematic Maker",
+
+  "block.the_smod.schematic_builder": "Schematic Builder",
+
   "itemGroup.the_smod.smod_tab": "SMod"
 }
