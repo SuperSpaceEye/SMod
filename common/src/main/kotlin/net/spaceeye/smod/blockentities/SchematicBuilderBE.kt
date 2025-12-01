@@ -349,6 +349,7 @@ class VSchematicBuilderBE(pos: BlockPos, state: BlockState): BlockEntity(SBlockE
     var schematic: VModShipSchematicV2? = null
 
     var lastTime = 0L
+    @Volatile var building = false
 
     override fun saveAdditional(tag: CompoundTag) {
         val stag = (schematic?.serialize() as? CompoundTagSerializable)?.tag ?: return
@@ -359,6 +360,7 @@ class VSchematicBuilderBE(pos: BlockPos, state: BlockState): BlockEntity(SBlockE
         schematic = null
         val stag = tag.get("schematic") as? CompoundTag ?: return
         schematic = VModShipSchematicV2().also { it.deserialize(CompoundTagSerializable(stag).serialize()) }
+        building = false
     }
 
     private fun findFrame(axis: Vector3i, getContainers: Boolean = false): Pair<Vector3i, List<Container>> {
@@ -425,6 +427,7 @@ class VSchematicBuilderBE(pos: BlockPos, state: BlockState): BlockEntity(SBlockE
     }
 
     fun buildSchematic(player: ServerPlayer?) {
+        if (building) { return }
         //TODO config
         if (getNow_ms() - lastTime < 1000) { return }
         lastTime = getNow_ms()
@@ -483,6 +486,7 @@ class VSchematicBuilderBE(pos: BlockPos, state: BlockState): BlockEntity(SBlockE
             }
         }
 
+        building = true
         //TODO not sure if i like it
         schematic.placeAt(level, player, player?.uuid ?: UUID(0L, 0L), toPos.toJomlVector3d(), Quaterniond(),
             PasteSchematicSettings(false, false, logger = SM.logger,
@@ -501,6 +505,7 @@ class VSchematicBuilderBE(pos: BlockPos, state: BlockState): BlockEntity(SBlockE
                 externalVSchemSupportProvider = SMSchemCompatObj
             )
         ) {
+            building = false
             if (notConsumed.isEmpty()) return@placeAt
 
             //TODO recompute containers cuz they could become invalid and void items

@@ -1,0 +1,21 @@
+{
+  "id": "main/schematic_builder",
+  "icon": "minecraft:book",
+  "category": "the_smod:main",
+  "name": "Schematic Builder",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "Schematic builder can build VMod schematics.$(br)To use:$(li)Place builder somewhere$(li)Add extensions (by default it\u0027s oak planks, but you can change it with datapack) to it (up/down, left/right, front/back). Length of the extensions will determine how big of an object it can build.$(li)Place containers directly next to extensions (chests, shulkers, etc)$(br)",
+      "title": "Schematic Builder"
+    },
+    {
+      "type": "patchouli:image",
+      "text": "It should look something like this",
+      "images": [
+        "the_smod:patchouli_assets/en_us/main/assets/schem_builder_1.png"
+      ]
+    },
+    "Schematic builder will use blocks from containers to build schematic.$(br)You can also trigger build with redstone signal. "
+  ]
+}

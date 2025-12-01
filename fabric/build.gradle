@@ -71,6 +71,11 @@ processResources {
     filesMatching("fabric.mod.json") {
         expand "version": project.version
     }
+
+    from(rootProject.file("common/src/main/resources")) {
+        include("data/")
+        include("assets/")
+    }
 }
 
 shadowJar {
