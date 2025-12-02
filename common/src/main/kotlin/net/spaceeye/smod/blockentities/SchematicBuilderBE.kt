@@ -186,7 +186,12 @@ object VSchematicBuilderNetworking {
         }
     }
 
-    data class SendSchemRequest(var pos: BlockPos): AutoSerializable
+    data class SendSchemRequest(var x: Int, var y: Int, var z: Int): AutoSerializable {
+        constructor(pos: BlockPos): this(pos.x, pos.y, pos.z)
+        var pos: BlockPos
+            get() = BlockPos(x, y, z)
+            set(value) {x = value.x; y = value.y; z = value.z}
+    }
 
     val callbacks = mutableMapOf<BlockPos, (schematic: VModShipSchematicV2?) -> Unit>()
 
@@ -248,7 +253,7 @@ class VSchematicBuilderMenu(val level: ClientLevel, val pos: BlockPos): WindowSc
             } childOf itemsScroll
 
             Button(Color.GRAY.brighter(), LOAD.get()) {
-                be!!.schematic = PlayerSchematics.loadSchematic(path) as VModShipSchematicV2
+                be!!.schematic = PlayerSchematics.loadSchematic(path) as? VModShipSchematicV2 ?: return@Button
                 VSchematicBuilderNetworking.c2sBeginLoadSchematic.sendToServer(VSchematicBuilderNetworking.SendSchemRequest(pos))
                 makeGUI(be.schematic)
             }.constrain {
