@@ -201,8 +201,6 @@ object VSchematicBuilderNetworking {
 }
 
 class VSchematicBuilderMenu(val level: ClientLevel, val pos: BlockPos): WindowScreen(ElementaVersion.V8) {
-    override fun isPauseScreen(): Boolean = false
-
     val be = level.getBlockEntity(pos) as? VSchematicBuilderBE
 
     val screen = UIBlock() constrain {
@@ -232,11 +230,6 @@ class VSchematicBuilderMenu(val level: ClientLevel, val pos: BlockPos): WindowSc
         x = (2f).pixels(true)
         y = (2f).pixels()
     } childOf screen
-
-    init {
-        VSchematicBuilderNetworking.callbacks[pos] = { Window.enqueueRenderOperation { makeGUI(it) } }
-        VSchematicBuilderNetworking.getSchemStream.r2tRequestData.transmitData(VSchematicBuilderNetworking.SendSchemRequest(pos))
-    }
 
     private fun makeSchematicsList() {
         val paths = PlayerSchematics.listSchematics().sortedWith { a, b ->
@@ -276,7 +269,7 @@ class VSchematicBuilderMenu(val level: ClientLevel, val pos: BlockPos): WindowSc
         }
     }
 
-    private fun makeGUI(schematic: VModShipSchematicV2?) {
+    fun makeGUI(schematic: VModShipSchematicV2?) {
         loadingText.hide()
         if (schematic == null) { return makeSchematicsList() }
 

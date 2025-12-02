@@ -1,5 +1,6 @@
 package net.spaceeye.smod.blocks
 
+import gg.essential.elementa.components.Window
 import net.minecraft.client.Minecraft
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.BlockPos
@@ -15,6 +16,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.BlockHitResult
 import net.spaceeye.smod.blockentities.VSchematicBuilderBE
 import net.spaceeye.smod.blockentities.VSchematicBuilderMenu
+import net.spaceeye.smod.blockentities.VSchematicBuilderNetworking
 
 class SchematicBuilder(properties: Properties): BaseEntityBlock(properties) {
     override fun use(
@@ -27,7 +29,12 @@ class SchematicBuilder(properties: Properties): BaseEntityBlock(properties) {
     ): InteractionResult? {
         if (hand == InteractionHand.OFF_HAND) return InteractionResult.FAIL
         if (level.isClientSide) {
-            Minecraft.getInstance().setScreen(VSchematicBuilderMenu(level as ClientLevel, pos))
+            VSchematicBuilderNetworking.callbacks[pos] = { Window.enqueueRenderOperation {
+                val screen = VSchematicBuilderMenu(level as ClientLevel, pos)
+                Minecraft.getInstance().setScreen(screen)
+                screen.makeGUI(it)
+            } }
+            VSchematicBuilderNetworking.getSchemStream.r2tRequestData.transmitData(VSchematicBuilderNetworking.SendSchemRequest(pos))
         }
         return InteractionResult.SUCCESS
     }
