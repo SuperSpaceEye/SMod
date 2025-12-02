@@ -289,7 +289,7 @@ class VSchematicBuilderMenu(val level: ClientLevel, val pos: BlockPos): WindowSc
 
         val blocks = blockMap.toList().sortedBy { (state, num) -> num }
         blocks.forEach { (state, num) ->
-            makeText("${state.toString()} ${num}", Color.BLACK, 2f, 2f, itemsScroll)
+            makeText("${BuiltInRegistries.ITEM.getKey(state)} ${num}", Color.BLACK, 2f, 2f, itemsScroll)
         }
     }
 
@@ -445,8 +445,9 @@ class VSchematicBuilderBE(pos: BlockPos, state: BlockState): BlockEntity(SBlockE
         ).toMutableList().also { it.addAll(subContainers) }
 
         if (containers.isEmpty()) {return run { player?.sendSystemMessage(makeFake("No containers to get blocks from for schematic.")) }}
-        if (maxSize.x == 0 || maxSize.y == 0 || maxSize.z == 0) {return run { player?.sendSystemMessage(makeFake("Frame size ${maxSize.absolute()} is too small for schematic size $schemSize")) }}
-        if (schemSize.x > abs(maxSize.x) || schemSize.y > abs(maxSize.y) || schemSize.z > abs(maxSize.z)) {return run { player?.sendSystemMessage(makeFake("Frame size ${maxSize.absolute()} is too small for schematic size $schemSize")) }}
+        //TODO add check to GUI
+        if (maxSize.x == 0 || maxSize.y == 0 || maxSize.z == 0) {return run {val mSize = maxSize.absolute(); val cSize = schemSize.ceil(); player?.sendSystemMessage(makeFake("Frame size (${mSize.x}, ${mSize.y}, ${mSize.z}) is too small for schematic size (${cSize.x.toInt()}, ${cSize.y.toInt()}, ${cSize.z.toInt()})")) }}
+        if (schemSize.x > abs(maxSize.x) || schemSize.y > abs(maxSize.y) || schemSize.z > abs(maxSize.z)){return run {val mSize = maxSize.absolute(); val cSize = schemSize.ceil(); player?.sendSystemMessage(makeFake("Frame size (${mSize.x}, ${mSize.y}, ${mSize.z}) is too small for schematic size (${cSize.x.toInt()}, ${cSize.y.toInt()}, ${cSize.z.toInt()})")) }}
 
         val toPos = Vector3d(blockPos) + Vector3d(maxSize).sign() + Vector3d(maxSize) / 2
 
